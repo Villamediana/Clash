@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BaseadoemFatos – Clã</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0d0d15;
+      --card:rgba(255,255,255,.06);
+      --glass:rgba(255,255,255,.08);
+      --fg:#f5f6fa;
+      --muted:#9ca3af;
+      --accent0:#4ade80;
+      --accent1:#16a34a;
+      --radius:14px;
+      --gap:1rem;
+      --t:.3s ease;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Inter,sans-serif;background:var(--bg);color:var(--fg);}
+    a{color:var(--accent0);text-decoration:none;transition:opacity var(--t);}
+    a:hover{opacity:.8;}
+
+    nav{position:fixed;inset:0 0 auto;display:flex;align-items:center;
+        padding:.9rem 1.4rem;background:rgba(13,13,21,.55);backdrop-filter:blur(14px);
+        border-bottom:1px solid rgba(255,255,255,.06);z-index:10;}
+    .logo img{width:40px;aspect-ratio:1/1;object-fit:contain;}
+
+    .hero {
+      min-height:70vh;
+      display:flex;justify-content:center;align-items:center;text-align:center;
+      position:relative;padding:4rem 1rem;
+      background:url("https://source.unsplash.com/1600x900/?clash-royale") center/cover no-repeat;
+    }
+    .hero::before {
+      content:"";
+      position:absolute;inset:0;
+      background:linear-gradient(
+        200deg,
+        rgba(0,0,0,.55) 30%,
+        rgba(22,163,74,.45),
+        rgba(74,222,128,.45)
+      );
+      background-size:200% 200%;
+      animation:gradientMove 12s linear infinite;
+    }
+    @keyframes gradientMove {
+      0%   { background-position:0% 50%; }
+      50%  { background-position:100% 50%; }
+      100% { background-position:0% 50%; }
+    }
+    .hero>div{
+      position:relative;max-width:740px;margin-inline:auto;
+      display:flex;flex-direction:column;align-items:center;
+    }
+    .hero h1{font-size:clamp(2.4rem,6vw,3.4rem);font-weight:700;margin-bottom:.7rem;text-shadow:0 2px 6px rgba(0,0,0,.7);}
+    .hero p{font-size:1rem;margin-bottom:1.6rem;color:#d1fae5;text-shadow:0 2px 6px rgba(0,0,0,.7);}
+    .btn{display:inline-block;padding:.85rem 1.75rem;border-radius:var(--radius);font-weight:600;color:#0d0d15;
+         background:linear-gradient(90deg,var(--accent0),var(--accent1));box-shadow:0 4px 14px rgba(22,163,74,.35);
+         transition:transform var(--t),box-shadow var(--t);}
+    .btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(22,163,74,.45);}
+
+    section{padding:4.5rem 1.25rem;}
+    h2{text-align:center;font-size:1.65rem;background:linear-gradient(90deg,var(--accent0),var(--accent1));
+        -webkit-background-clip:text;color:transparent;margin-bottom:2rem;}
+    .container{max-width:740px;margin-inline:auto;}
+
+    .clan-header{display:flex;align-items:center;gap:var(--gap);background:var(--card);padding:var(--gap);
+                 border-radius:var(--radius);backdrop-filter:blur(10px);box-shadow:0 6px 22px rgba(0,0,0,.4);}
+    .clan-header img{width:74px;aspect-ratio:1/1;border-radius:14px;object-fit:contain;flex-shrink:0;}
+    .clan-header h3{font-size:1.25rem;margin-bottom:.25rem;}
+    .clan-header p{font-size:.9rem;color:var(--muted);}
+
+    .clan-list{margin-top:var(--gap);list-style:none;display:flex;flex-direction:column;gap:.75rem;
+               max-height:420px;overflow-y:auto;}
+    .clan-list li{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:1.2rem 1.5rem;           /* itens mais largos */
+      width:100%;
+      border-radius:var(--radius);
+      background:var(--card);
+      backdrop-filter:blur(8px);
+      box-shadow:0 2px 12px rgba(0,0,0,.35);
+      transition:transform var(--t),box-shadow var(--t);
+      cursor:pointer;                 /* pointer já aqui */
+    }
+    .clan-list li:hover{
+      transform:translateY(-2px);
+      box-shadow:0 4px 18px rgba(0,0,0,.5);
+      cursor:pointer;                 /* reforça pointer */
+    }
+    .clan-list span:last-child{font-size:.85rem;color:var(--muted);}
+
+    .member{font-weight:400;}
+    .elder{font-weight:700;}
+    .coleader{font-weight:700;
+      background:linear-gradient(90deg,var(--accent0),#afffcb,var(--accent1));
+      -webkit-background-clip:text;color:transparent;background-size:300% 100%;
+      animation:roll 3s linear infinite;text-shadow:0 0 6px rgba(78,255,183,.6);
+    }
+    .leader{font-weight:700;
+      background:linear-gradient(90deg,#fcd34d,#f59e0b,#fcd34d);
+      -webkit-background-clip:text;color:transparent;background-size:250% 100%;
+      animation:roll 4s linear infinite;text-shadow:0 0 8px rgba(255,215,0,.7);
+    }
+    @keyframes roll{100%{background-position:100% 0;}}
+
+    footer{text-align:center;font-size:.85rem;padding:2.2rem 1rem;color:var(--muted);
+           border-top:1px solid rgba(255,255,255,.08);margin-top:4rem;}
+    html{scrollbar-width:thin;scrollbar-color:var(--accent1) var(--glass);}
+    html::-webkit-scrollbar{width:8px;}
+    html::-webkit-scrollbar-track{background:var(--glass);}
+    html::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent1),var(--accent0));border-radius:6px;}
+    html::-webkit-scrollbar-corner{background:var(--bg);}
+  </style>
+</head>
+<body>
+
+  <nav><div class="logo"><img id="navLogo" src="" alt="Logo do Clã"></div></nav>
+
+  <section class="hero">
+    <div>
+      <h1>Baseado em Fatos</h1>
+      <p>Unidos pela honra, forjados na guerra.</p>
+      <a href="#clan" class="btn">Ver Clã</a>
+    </div>
+  </section>
+
+  <section id="clan">
+    <div class="container">
+      <h2>Informações do Clã</h2>
+      <div class="clan-header" id="clanHeader">
+        <img id="clanBadge" src="" alt="Emblema do Clã">
+        <div>
+          <h3 id="clanName">—</h3>
+          <p id="clanStats">—</p>
+        </div>
+      </div>
+      <ul class="clan-list" id="clanList">
+        <li>Carregando informações…</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>&copy; 2025 Baseado em Fatos – todos os direitos reservados.</footer>
+
+  <script>
+    const navLogo    = document.getElementById('navLogo');
+    const clanBadge  = document.getElementById('clanBadge');
+    const clanName   = document.getElementById('clanName');
+    const clanStats  = document.getElementById('clanStats');
+    const clanList   = document.getElementById('clanList');
+    const clanHeader = document.getElementById('clanHeader');
+    const toolUrl    = "{{ url_for('tool') }}";
+
+    const rolePT  = {leader:'Líder', coleader:'Colíder', elder:'Ancião', member:'Membro'};
+    const cssRole = {leader:'leader', coleader:'coleader', elder:'elder', member:'member'};
+
+    fetch('/api/clan-info')
+  .then(r => r.json())
+  .then(({ clan, memberList }) => {
+    if (clan) {
+      navLogo.src   = clan.badgeUrl;
+      clanBadge.src = clan.badgeUrl;
+      clanName.textContent  = `${clan.name} (${clan.tag})`;
+      clanStats.textContent = `${clan.membersCount} membros · Pontuação ${clan.clanScore} · Guerra ${clan.clanWarTrophies}`;
+
+      // Atualiza favicon da aba
+      let favicon = document.querySelector("link[rel='icon']");
+      if (!favicon) {
+        favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        document.head.appendChild(favicon);
+      }
+      favicon.href = clan.badgeUrl;
+    }
+
+    clanList.innerHTML = Array.isArray(memberList) && memberList.length
+      ? memberList.map((m, i) => {
+          const key = m.role.toLowerCase();
+          return `
+            <li onclick="location.href='${toolUrl}?tag=${encodeURIComponent(m.tag)}'">
+              <span>${i + 1}. ${m.name}</span>
+              <span><span class="${cssRole[key]}">${rolePT[key] || m.role}</span> · ${m.trophies} troféus</span>
+            </li>`;
+        }).join('')
+      : '<li>Nenhum membro encontrado.</li>';
+  })
+  .catch(() => {
+    clanHeader.style.display = 'none';
+    clanList.innerHTML = '<li>Erro ao carregar dados.</li>';
+  });
+
+  </script>
+
+</body>
+</html>
