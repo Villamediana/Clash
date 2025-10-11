@@ -16,7 +16,7 @@ CLAN_TAG = "#G9QY8GPR"
 
 # Configuração de proxy para desenvolvimento local (controle no código)
 # Ajuste para True para habilitar o uso de proxy e criação automática do túnel SSH
-USE_PROXY = True
+USE_PROXY = False
 PROXIES = {
     'http': 'socks5h://127.0.0.1:8080',
     'https': 'socks5h://127.0.0.1:8080'
