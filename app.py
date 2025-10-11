@@ -3,11 +3,15 @@ import requests
 import json
 import os
 import re
+import subprocess
+import socket
+import time
 
 app = Flask(__name__)
 
-# Configuração de proxy para desenvolvimento local
-USE_PROXY = os.environ.get('USE_PROXY', 'false').lower() == 'true'
+# Configuração de proxy para desenvolvimento local (controle no código)
+# Ajuste para True para habilitar o uso de proxy e criação automática do túnel SSH
+USE_PROXY = False
 PROXIES = {
     'http': 'socks5h://127.0.0.1:8080',
     'https': 'socks5h://127.0.0.1:8080'
@@ -17,11 +21,43 @@ TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi0
 BADGE_MAPPING_URL = "https://royaleapi.github.io/cr-api-data/json/alliance_badges.json"
 
 # Carrega mapeamento de badgeId → name (uma vez, na inicialização)
+# Não usa proxy aqui para evitar depender do túnel na importação do módulo
 try:
-    badge_mapping = requests.get(BADGE_MAPPING_URL, proxies=PROXIES).json()
+    badge_mapping = requests.get(BADGE_MAPPING_URL).json()
 except Exception as e:
     app.logger.error(f"Erro ao carregar badge mapping: {e}")
     badge_mapping = []
+
+def _is_socks_proxy_listening(host: str = "127.0.0.1", port: int = 8080, timeout_seconds: float = 0.5) -> bool:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout_seconds)
+    try:
+        sock.connect((host, port))
+        return True
+    except Exception:
+        return False
+    finally:
+        try:
+            sock.close()
+        except Exception:
+            pass
+
+def _start_ssh_tunnel_socks5():
+    # Abre uma nova janela do PowerShell que solicitará a senha e manterá o túnel ativo
+    print("Estabelecendo túnel SSH para 103.199.185.54. Insira a senha do usuário root na janela aberta...")
+    command = 'powershell -NoExit -Command "Write-Host \"Abrindo túnel: ssh -D 8080 -N root@103.199.185.54\"; ssh -D 8080 -N root@103.199.185.54"'
+    # Usa 'start' do cmd para abrir uma nova janela
+    subprocess.Popen(["cmd", "/c", "start", command], shell=False)
+    # Aguarda o túnel ficar disponível (até 120s)
+    max_wait_seconds = 120
+    waited = 0
+    while waited < max_wait_seconds and not _is_socks_proxy_listening():
+        time.sleep(1)
+        waited += 1
+    if _is_socks_proxy_listening():
+        print("Túnel SSH ativo em 127.0.0.1:8080.")
+    else:
+        print("Aviso: não foi possível detectar o túnel em 127.0.0.1:8080. Verifique a senha/janela do SSH.")
 
 def get_headers():
     return {
@@ -197,5 +233,7 @@ def estatisticas_cartas():
     return jsonify(resultado)
 
 if __name__ == "__main__":
+    if USE_PROXY:
+        _start_ssh_tunnel_socks5()
     app.run(host="0.0.0.0", port=5001, debug=True)
 
