@@ -6,14 +6,12 @@ import re
 import time
 from datetime import datetime, timezone
 import threading
-import shutil
 
 app = Flask(__name__)
 
 # Config base
 CLAN_TAG = "#G9QY8GPR"
 
- 
 
 TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjRiNDYzOTRmLWJhN2UtNDhiYS1hNTY0LWQ0NDdjZjRlYTk0MSIsImlhdCI6MTc2MDIwMTYxNywic3ViIjoiZGV2ZWxvcGVyLzI5ZDU1N2YzLTc1MTUtNDNhYy04YjI4LWYwMzRhMThiN2MxYyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxMDMuMTk5LjE4NS41NCJdLCJ0eXBlIjoiY2xpZW50In1dfQ.hrj4c012WJ3YunuBL2AzroxSG_SxQv8QG0VDpN6IH1YyuNymNW6m92GEjyfKH-yZBuH8Pdzz8HmuWVnGoKJcYA"
 BADGE_MAPPING_URL = "https://royaleapi.github.io/cr-api-data/json/alliance_badges.json"
@@ -276,75 +274,6 @@ def _compute_danger_list(members: list) -> list[dict]:
     except Exception:
         return []
 
-
-def _write_player_historico(player_tag: str, battles: list) -> None:
-    """Cria/atualiza arquivo historico_{tag}.json com partidas novas (sem duplicar)."""
-    try:
-        if not player_tag:
-            return
-        safe = re.sub(r"\W+", "", player_tag)
-        arquivo = f"historico_{safe}.json"
-        historico = []
-        if os.path.exists(arquivo):
-            try:
-                with open(arquivo, "r", encoding="utf-8") as f:
-                    historico = json.load(f)
-            except Exception:
-                historico = []
-        # conjunto de chaves vistas para evitar duplicidade
-        try:
-            seen = {h.get("battleTime", "") + ((h.get("team") or [{}])[0].get("tag") or "") for h in historico}
-        except Exception:
-            seen = set()
-        novas = []
-        for b in (battles or []):
-            try:
-                key = (b.get("battleTime") or "") + (((b.get("team") or [{}])[0]).get("tag") or "")
-            except Exception:
-                key = None
-            if key and key not in seen:
-                novas.append(b)
-        if novas:
-            historico += novas
-            try:
-                with open(arquivo, "w", encoding="utf-8") as f:
-                    json.dump(historico, f, ensure_ascii=False, indent=4)
-            except Exception:
-                pass
-    except Exception:
-        # não deixa o updater cair por falhas de IO/JSON
-        pass
-
-
-def _archive_non_member_historicos(current_member_safe_tags: set[str], archive_dir: str = "historico_archived") -> None:
-    """Move historico_*.json de ex-membros para a pasta de arquivo, mantendo apenas atuais na raiz."""
-    try:
-        if not isinstance(current_member_safe_tags, set):
-            current_member_safe_tags = set(current_member_safe_tags or [])
-        if not os.path.isdir(archive_dir):
-            try:
-                os.makedirs(archive_dir, exist_ok=True)
-            except Exception:
-                return
-        for fname in os.listdir():
-            if not (fname.startswith("historico_") and fname.endswith(".json")):
-                continue
-            try:
-                tag_safe = re.sub(r"^historico_|\.json$", "", fname)
-            except Exception:
-                continue
-            if tag_safe and tag_safe not in current_member_safe_tags:
-                src = fname
-                dst = os.path.join(archive_dir, fname)
-                try:
-                    if os.path.exists(dst):
-                        os.remove(dst)
-                    shutil.move(src, dst)
-                except Exception:
-                    continue
-    except Exception:
-        pass
-
 def get_headers():
     return {
         "Authorization": f"Bearer {TOKEN}",
@@ -364,6 +293,73 @@ def fetch_batalhas(tag, tipos):
         data = resp.json()
         return [b for b in data if b.get("type") in tipos] if tipos else data
     return []
+
+
+def _sync_player_histories(members: list) -> None:
+    """Sincroniza arquivos historico_{tag}.json para membros atuais e remove de ex‑membros.
+
+    - Para cada membro atual, cria/atualiza o arquivo com as batalhas mais recentes
+      (evitando duplicados, mesma lógica de /api/historico).
+    - Para quaisquer arquivos existentes de jogadores que não estejam mais no clã,
+      remove o arquivo para manter apenas atuais.
+    """
+    try:
+        current_tags = []
+        for m in members or []:
+            mt = m.get("tag")
+            if not mt:
+                continue
+            current_tags.append(mt)
+            safe = re.sub(r"\W+", "", mt)
+            arquivo = f"historico_{safe}.json"
+
+            # Carrega histórico existente
+            historico = []
+            if os.path.exists(arquivo):
+                try:
+                    with open(arquivo, "r", encoding="utf-8") as f:
+                        historico = json.load(f)
+                except Exception:
+                    historico = []
+
+            # Busca batalhas recentes e agrega não vistos
+            try:
+                batalhas = fetch_batalhas(mt, tipos=None)
+            except Exception:
+                batalhas = []
+            try:
+                seen = {h.get("battleTime", "") + ((h.get("team") or [{}])[0].get("tag") or "") for h in historico}
+                novas = [b for b in (batalhas or []) if (b.get("battleTime", "") + ((b.get("team") or [{}])[0].get("tag") or "")) not in seen]
+            except Exception:
+                novas = []
+
+            if novas:
+                try:
+                    historico += novas
+                    with open(arquivo, "w", encoding="utf-8") as f:
+                        json.dump(historico, f, ensure_ascii=False, indent=4)
+                except Exception:
+                    pass
+
+        # Remoção de históricos de ex‑membros
+        try:
+            current_safe = {re.sub(r"\W+", "", t) for t in current_tags}
+            files = [f for f in os.listdir() if f.startswith("historico_") and f.endswith(".json")]
+            for fpath in files:
+                try:
+                    tag_clean = re.sub(r"^historico_|\.json$", "", fpath)
+                    if tag_clean and tag_clean not in current_safe:
+                        try:
+                            os.remove(fpath)
+                        except Exception:
+                            pass
+                except Exception:
+                    continue
+        except Exception:
+            pass
+    except Exception:
+        # Falhas não devem quebrar o scheduler
+        pass
 
 @app.route("/")
 def index():
@@ -726,14 +722,9 @@ if __name__ == "__main__":
                         m_json = m_resp.json()
                         members_local = m_json.get("memberList") or m_json.get("items") or []
                         _update_members_first_seen(members_local)
-                        # Atualiza historicos dos membros atuais e arquiva ex-membros
+                        # Sincroniza históricos por jogador (cria/atualiza e remove ex‑membros)
                         try:
-                            safe_tags = set()
-                            for m in members_local:
-                                mt = (m or {}).get("tag") or ""
-                                if mt:
-                                    safe_tags.add(re.sub(r"\W+", "", mt))
-                            _archive_non_member_historicos(safe_tags)
+                            _sync_player_histories(members_local)
                         except Exception:
                             pass
                     # Atualiza winrate por deck para membros com partidas recentes
@@ -751,11 +742,6 @@ if __name__ == "__main__":
                                     bl = pl.json()
                                     # usa últimas 50 para janela
                                     bl = bl[:50]
-                                    # escreve/atualiza historico do jogador
-                                    try:
-                                        _write_player_historico(mt, bl)
-                                    except Exception:
-                                        pass
                                     # tenta identificar deck do time
                                     p = players.setdefault(mt, {"name": m.get("name"), "total": 0, "by_period": {}, "timeline": []})
                                     dh = p.setdefault("deckHistory", {})
@@ -824,32 +810,10 @@ if __name__ == "__main__":
                 m_json = m_resp.json()
                 members_local = m_json.get("memberList") or m_json.get("items") or []
                 _update_members_first_seen(members_local)
-                    # Atualiza historicos dos membros atuais e arquiva ex-membros
-                    try:
-                        safe_tags = set()
-                        for m in members_local:
-                            mt = (m or {}).get("tag") or ""
-                            if mt:
-                                safe_tags.add(re.sub(r"\W+", "", mt))
-                        _archive_non_member_historicos(safe_tags)
-                    except Exception:
-                        pass
-                    # Busca partidas e escreve historicos na inicialização
-                    try:
-                        for m in (members_local or []):
-                            mt = m.get("tag")
-                            if not mt:
-                                continue
-                            try:
-                                pl = requests.get(f"https://api.clashroyale.com/v1/players/{mt.replace('#','%23')}/battlelog", headers=get_headers())
-                                if pl.status_code==200:
-                                    bl = pl.json()
-                                    bl = bl[:50]
-                                    _write_player_historico(mt, bl)
-                            except Exception:
-                                continue
-                    except Exception:
-                        pass
+                try:
+                    _sync_player_histories(members_local)
+                except Exception:
+                    pass
     except Exception:
         pass
 
