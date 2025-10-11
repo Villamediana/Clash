@@ -3,39 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BaseadoemFatos – Clã</title>
+  <title>A Villa – Clã</title>
 
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root{
-      --bg:#0d0d15;
+      --bg:#0f0a07;                 /* fundo quente e escuro */
       --card:rgba(255,255,255,.06);
       --glass:rgba(255,255,255,.08);
       --fg:#f5f6fa;
-      --muted:#9ca3af;
-      --accent0:#4ade80;
-      --accent1:#16a34a;
+      --muted:#c8b7a6;              /* texto secundário mais quente */
+      --accent0:#f59e0b;            /* âmbar */
+      --accent1:#ef4444;            /* vermelho */
       --radius:14px;
       --gap:1rem;
       --t:.3s ease;
+      color-scheme: dark;           /* melhora aparência nativa de controles */
     }
 
     *{margin:0;padding:0;box-sizing:border-box;}
     body{font-family:Inter,sans-serif;background:var(--bg);color:var(--fg);}
+    body.preloading{overflow:hidden;}
     a{color:var(--accent0);text-decoration:none;transition:opacity var(--t);}
     a:hover{opacity:.8;}
 
     nav{position:fixed;inset:0 0 auto;display:flex;align-items:center;
-        padding:.9rem 1.4rem;background:rgba(13,13,21,.55);backdrop-filter:blur(14px);
+        padding:.6rem 1rem;background:rgba(13,13,21,.55);backdrop-filter:blur(14px);
         border-bottom:1px solid rgba(255,255,255,.06);z-index:10;}
-    .logo img{width:40px;aspect-ratio:1/1;object-fit:contain;}
+    .logo img{width:28px;aspect-ratio:1/1;object-fit:contain;}
 
     .hero {
-      min-height:70vh;
+      min-height:42vh;
       display:flex;justify-content:center;align-items:center;text-align:center;
-      position:relative;padding:4rem 1rem;
+      position:relative;padding:3rem 1rem;
       background:url("https://source.unsplash.com/1600x900/?clash-royale") center/cover no-repeat;
     }
     .hero::before {
@@ -43,12 +46,18 @@
       position:absolute;inset:0;
       background:linear-gradient(
         200deg,
-        rgba(0,0,0,.55) 30%,
-        rgba(22,163,74,.45),
-        rgba(74,222,128,.45)
+        rgba(0,0,0,.28) 10%,
+        rgba(245,158,11,.45),   /* âmbar */
+        rgba(239,68,68,.45)     /* vermelho */
       );
       background-size:200% 200%;
       animation:gradientMove 12s linear infinite;
+    }
+    /* Fade entre o banner e a próxima seção */
+    .hero::after{
+      content:"";position:absolute;left:0;right:0;bottom:0;height:60px;
+      background:linear-gradient(to bottom, rgba(0,0,0,0) 0%, var(--bg) 100%);
+      pointer-events:none;
     }
     @keyframes gradientMove {
       0%   { background-position:0% 50%; }
@@ -59,8 +68,10 @@
       position:relative;max-width:740px;margin-inline:auto;
       display:flex;flex-direction:column;align-items:center;
     }
+    .hero-title{display:flex;align-items:center;gap:.65rem;}
+    .hero-title img{width:75px;aspect-ratio:1/1;object-fit:contain;border-radius:10px;}
     .hero h1{font-size:clamp(2.4rem,6vw,3.4rem);font-weight:700;margin-bottom:.7rem;text-shadow:0 2px 6px rgba(0,0,0,.7);}
-    .hero p{font-size:1rem;margin-bottom:1.6rem;color:#d1fae5;text-shadow:0 2px 6px rgba(0,0,0,.7);}
+    .hero p{font-size:1rem;margin:.8rem 0 1.8rem;color:#c8b7a6;text-shadow:0 2px 6px rgba(0,0,0,.7);}
     .btn{display:inline-block;padding:.85rem 1.75rem;border-radius:var(--radius);font-weight:600;color:#0d0d15;
          background:linear-gradient(90deg,var(--accent0),var(--accent1));box-shadow:0 4px 14px rgba(22,163,74,.35);
          transition:transform var(--t),box-shadow var(--t);}
@@ -68,14 +79,55 @@
 
     section{padding:4.5rem 1.25rem;}
     h2{text-align:center;font-size:1.65rem;background:linear-gradient(90deg,var(--accent0),var(--accent1));
-        -webkit-background-clip:text;color:transparent;margin-bottom:2rem;}
+        -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:2rem;}
     .container{max-width:740px;margin-inline:auto;}
+
+    .list-controls{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;margin:0 0 1rem;}
+    .list-controls label{font-size:.85rem;color:var(--muted);} 
+    .list-controls .dd{position:relative;display:inline-block}
+    /* Ocultamos o select nativo e usamos um dropdown custom, mantendo o select para acessibilidade/estado */
+    .list-controls select{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
+    .dd-btn{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;color:var(--fg);font-size:.9rem;font-weight:600;
+      background:var(--card);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.5rem .9rem;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+    .dd-btn .chev{display:inline-block;width:10px;height:10px;background:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23f5f6fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>")
+      center/10px 10px no-repeat;opacity:.85}
+    .dd-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:220px;background:rgba(15,10,7,.98);
+      border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.5rem;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(10px);z-index:9999;display:none;
+      display:none;flex-direction:column;gap:.35rem}
+    .dd.open .dd-menu{display:flex}
+    .dd-item{display:flex;align-items:center;gap:.5rem;padding:.55rem .7rem;border-radius:10px;color:var(--fg);cursor:pointer}
+    .dd-item:hover{background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(239,68,68,.12))}
+    .dd-item.active{background:linear-gradient(135deg, rgba(245,158,11,.28), rgba(239,68,68,.18));}
+
+    /* Deck grid no modal */
+    .deck-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem}
+    .deck-card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:.25rem 0}
+    .deck-card img{width:112px;height:112px;object-fit:contain;border-radius:12px;}
+    .deck-card span{margin-top:.4rem;font-size:1rem}
+    /* Tabs no modal */
+    .tabs{display:flex;gap:.5rem;border-bottom:1px solid var(--glass);margin-bottom:.75rem}
+    .tab-btn{background:var(--card);border:1px solid var(--glass);color:var(--fg);padding:.45rem .8rem;border-radius:10px;cursor:pointer}
+    .tab-btn.active{background:linear-gradient(135deg,var(--accent0),var(--accent1));color:#0d0d15;border-color:transparent}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    /* Tooltips bonitos (via JS para não serem cortados pelo overflow) */
+    .tt{position:relative;cursor:help}
+    .tt::after{content:none}
+    .tooltip-floating{
+      position:fixed;left:0;top:0;transform:translate(-50%,-100%);
+      background:var(--card);color:var(--fg);padding:.45rem .6rem;border-radius:8px;white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 24px rgba(0,0,0,.4);
+      z-index:2147483647;font-size:.8rem;pointer-events:none;opacity:0;transition:opacity .12s ease;
+    }
 
     .clan-header{display:flex;align-items:center;gap:var(--gap);background:var(--card);padding:var(--gap);
                  border-radius:var(--radius);backdrop-filter:blur(10px);box-shadow:0 6px 22px rgba(0,0,0,.4);}
-    .clan-header img{width:74px;aspect-ratio:1/1;border-radius:14px;object-fit:contain;flex-shrink:0;}
+    /* removemos o emblema aqui */
+    .clan-header .meta{display:flex;flex-direction:column;gap:.25rem}
     .clan-header h3{font-size:1.25rem;margin-bottom:.25rem;}
-    .clan-header p{font-size:.9rem;color:var(--muted);}
+    .clan-header p{font-size:.95rem;color:var(--muted);}
 
     .clan-list{margin-top:var(--gap);list-style:none;display:flex;flex-direction:column;gap:.75rem;
                max-height:420px;overflow-y:auto;}
@@ -90,6 +142,15 @@
       transition:transform var(--t),box-shadow var(--t);
       cursor:pointer;                 /* pointer já aqui */
     }
+    /* Destaque dramático para subidas/quedas */
+    .clan-list li.rank-up{
+      border:1px solid rgba(34,197,94,.45);
+      box-shadow:0 2px 14px rgba(0,0,0,.35), 0 0 22px rgba(34,197,94,.25);
+    }
+    .clan-list li.rank-down{
+      border:1px solid rgba(239,68,68,.45);
+      box-shadow:0 2px 14px rgba(0,0,0,.35), 0 0 22px rgba(239,68,68,.25);
+    }
     .clan-list li:hover{
       transform:translateY(-2px);
       box-shadow:0 4px 18px rgba(0,0,0,.5);
@@ -101,15 +162,20 @@
     .elder{font-weight:700;}
     .coleader{font-weight:700;
       background:linear-gradient(90deg,var(--accent0),#afffcb,var(--accent1));
-      -webkit-background-clip:text;color:transparent;background-size:300% 100%;
-      animation:roll 3s linear infinite;text-shadow:0 0 6px rgba(78,255,183,.6);
+      -webkit-background-clip:text;background-clip:text;color:transparent;background-size:300% 100%;
+      background-position:0% 50%;
+      animation:roll 6s linear infinite;text-shadow:0 0 6px rgba(78,255,183,.6);
     }
     .leader{font-weight:700;
       background:linear-gradient(90deg,#fcd34d,#f59e0b,#fcd34d);
-      -webkit-background-clip:text;color:transparent;background-size:250% 100%;
-      animation:roll 4s linear infinite;text-shadow:0 0 8px rgba(255,215,0,.7);
+      -webkit-background-clip:text;background-clip:text;color:transparent;background-size:250% 100%;
+      background-position:0% 50%;
+      animation:roll 8s linear infinite;text-shadow:0 0 8px rgba(255,215,0,.7);
     }
-    @keyframes roll{100%{background-position:100% 0;}}
+    @keyframes roll{
+      0%{background-position:0% 50%;}
+      100%{background-position:100% 50%;}
+    }
 
     footer{text-align:center;font-size:.85rem;padding:2.2rem 1rem;color:var(--muted);
            border-top:1px solid rgba(255,255,255,.08);margin-top:4rem;}
@@ -118,27 +184,72 @@
     html::-webkit-scrollbar-track{background:var(--glass);}
     html::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent1),var(--accent0));border-radius:6px;}
     html::-webkit-scrollbar-corner{background:var(--bg);}
+
+    /* Preloader de tela cheia com o mesmo gradiente animado do herói */
+    #preloader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;opacity:1;transition:opacity .5s ease;}
+    #preloader.hide{opacity:0;pointer-events:none;}
+    #preloader .pre-bg{position:absolute;inset:0;
+      background:linear-gradient(200deg,#3b1d13 20%,#f59e0b,#ef4444);
+      background-size:200% 200%;animation:gradientMove 12s linear infinite;}
+    .spinner{position:relative;width:54px;height:54px;border-radius:50%;
+      border:3px solid rgba(255,255,255,.18);border-top-color:#ef4444;border-right-color:#ef4444;
+      animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
-<body>
+<body class="preloading">
 
-  <nav><div class="logo"><img id="navLogo" src="" alt="Logo do Clã"></div></nav>
+  <div id="preloader" aria-live="polite" aria-busy="true">
+    <div class="pre-bg"></div>
+    <div class="spinner" role="status" aria-label="Carregando"></div>
+  </div>
+
+  <!--<nav><div class="logo"><img id="navLogo" src="" alt="Logo do Clã"></div></nav>-->
 
   <section class="hero">
     <div>
-      <h1>Baseado em Fatos</h1>
-      <p>Unidos pela honra, forjados na guerra.</p>
-      <a href="#clan" class="btn">Ver Clã</a>
+      <div class="hero-title">
+        <img id="heroLogo" src="" alt="Emblema do Clã">
+        <h1 id="heroTitle"></h1>
+      </div>
+      <p>Uma comunidade unida por vitórias</p>
     </div>
   </section>
 
   <section id="clan">
     <div class="container">
-      <h2>Informações do Clã</h2>
+      <!-- Modal do jogador -->
+      <div id="playerModal" style="display:none;position:fixed;inset:0;z-index:9998;">
+        <div id="pmBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);"></div>
+        <div style="position:relative;max-width:1000px;margin:6vh auto;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1rem;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem;border-bottom:1px solid var(--glass)">
+            <h3 id="pmTitle" style="font-size:1.2rem">Jogador</h3>
+            <button id="pmClose" style="background:linear-gradient(135deg,var(--accent0),var(--accent1));color:#0d0d15;border:none;border-radius:10px;padding:.4rem .7rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)">Fechar</button>
+          </div>
+          <div id="pmContent" style="padding:1rem;max-height:70vh;overflow:auto">
+            Carregando…
+          </div>
+        </div>
+      </div>
+      <div class="list-controls">
+        <label for="orderBy">Ordenar por</label>
+        <div class="dd" id="orderDd">
+          <button type="button" class="dd-btn" id="orderBtn"><span id="orderLabel">Medalhas acumuladas</span><span class="chev"></span></button>
+          <select id="orderBy">
+            <option value="default">Ranking padrão</option>
+            <option value="medals" selected>Medalhas acumuladas</option>
+            <option value="current">Medalhas (guerra atual)</option>
+          </select>
+          <div class="dd-menu" id="orderMenu">
+            <div class="dd-item" data-val="default">Ranking padrão</div>
+            <div class="dd-item active" data-val="medals">Medalhas acumuladas</div>
+            <div class="dd-item" data-val="current">Medalhas (guerra atual)</div>
+          </div>
+        </div>
+      </div>
       <div class="clan-header" id="clanHeader">
-        <img id="clanBadge" src="" alt="Emblema do Clã">
-        <div>
-          <h3 id="clanName">—</h3>
+        <div class="meta">
+          <h3 id="clanTag">—</h3>
           <p id="clanStats">—</p>
         </div>
       </div>
@@ -148,16 +259,23 @@
     </div>
   </section>
 
-  <footer>&copy; 2025 Baseado em Fatos – todos os direitos reservados.</footer>
+  <footer>&copy; 2025 A Villa – todos os direitos reservados.</footer>
 
   <script>
     const navLogo    = document.getElementById('navLogo');
-    const clanBadge  = document.getElementById('clanBadge');
-    const clanName   = document.getElementById('clanName');
+    const clanTagEl  = document.getElementById('clanTag');
     const clanStats  = document.getElementById('clanStats');
     const clanList   = document.getElementById('clanList');
     const clanHeader = document.getElementById('clanHeader');
     const toolUrl    = "{{ url_for('tool') }}";
+    const preloader  = document.getElementById('preloader');
+
+    function hidePreloader(){
+      if(!preloader) return;
+      document.body.classList.remove('preloading');
+      preloader.classList.add('hide');
+      preloader.addEventListener('transitionend',()=>preloader.remove(),{once:true});
+    }
 
     const rolePT  = {leader:'Líder', coleader:'Colíder', elder:'Ancião', member:'Membro'};
     const cssRole = {leader:'leader', coleader:'coleader', elder:'elder', member:'member'};
@@ -166,10 +284,37 @@
   .then(r => r.json())
   .then(({ clan, memberList }) => {
     if (clan) {
-      navLogo.src   = clan.badgeUrl;
-      clanBadge.src = clan.badgeUrl;
-      clanName.textContent  = `${clan.name} (${clan.tag})`;
-      clanStats.textContent = `${clan.membersCount} membros · Pontuação ${clan.clanScore} · Guerra ${clan.clanWarTrophies}`;
+      if (navLogo) navLogo.src = clan.badgeUrl;
+      const heroLogo = document.getElementById('heroLogo');
+      if (heroLogo) heroLogo.src = clan.badgeUrl;
+      const heroTitle = document.getElementById('heroTitle');
+      if (heroTitle) heroTitle.textContent = clan.name;
+      if (clanTagEl) clanTagEl.textContent = `${clan.tag}`;
+
+      // Monta estatísticas com emojis
+      const membros = `${clan.membersCount} membros`;
+      const war = `🏆 ${clan.clanWarTrophies} troféus`;
+      const score = `⚔️ ${clan.clanScore} pontuação`;
+      // Idade (se existir createdAt)
+      let idade = '';
+      if (clan.createdAt) {
+        const created = new Date(clan.createdAt);
+        if (!isNaN(created)) {
+          const diffMs = Date.now() - created.getTime();
+          const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          // Ocultamos a exibição em dias por enquanto (mantendo o cálculo)
+          if (dias < 60) idade = '';
+          else {
+            const meses = Math.floor(dias / 30);
+            if (meses < 24) idade = `· 📅 ${meses} meses`;
+            else {
+              const anos = Math.floor(meses / 12);
+              idade = `· 📅 ${anos} anos`;
+            }
+          }
+        }
+      }
+      clanStats.textContent = `👥 ${membros} · ${war} · ${score} ${idade}`;
 
       // Atualiza favicon da aba
       let favicon = document.querySelector("link[rel='icon']");
@@ -181,23 +326,325 @@
       favicon.href = clan.badgeUrl;
     }
 
-    clanList.innerHTML = Array.isArray(memberList) && memberList.length
-      ? memberList.map((m, i) => {
-          const key = m.role.toLowerCase();
+    // Render com ordenação
+    let membersData = Array.isArray(memberList) ? memberList.slice() : [];
+    let sortMode = 'medals';
+
+    function renderMembers(){
+      if (!membersData.length){
+        clanList.innerHTML = '<li>Nenhum membro encontrado.</li>';
+        return;
+      }
+      let data = membersData.slice();
+      if (sortMode === 'medals'){
+        data.sort((a,b)=>{
+          const at=a.fameTotal||0, bt=b.fameTotal||0;
+          if (bt!==at) return bt-at;
+          return (b.trophies||0)-(a.trophies||0);
+        });
+      } else if (sortMode === 'current'){
+        data.sort((a,b)=>{
+          const at=a.fame||0, bt=b.fame||0;
+          if (bt!==at) return bt-at;
+          return (b.trophies||0)-(a.trophies||0);
+        });
+      }
+      clanList.innerHTML = data.map((m, idx)=>{
+        const key = (m.role||'member').toLowerCase();
+        const arrowSticky = m.rankDeltaSticky || 0;
+        const arrow = arrowSticky>0? '<span style="color:#22c55e;font-weight:700">⬆</span>' : (arrowSticky<0? '<span style="color:#ef4444;font-weight:700">⬇</span>' : '');
+        const pos = (sortMode==='medals'||sortMode==='current')? (idx+1) : (membersData.indexOf(m)+1);
+        const rowCls = arrowSticky>0? 'rank-up' : (arrowSticky<0? 'rank-down' : '');
+        const firstSeen = m.firstSeen ? new Date(m.firstSeen) : null;
+        const firstSeenStr = firstSeen? firstSeen.toLocaleDateString('pt-BR') : '—';
+        // Texto relativo em PT-BR: dias/meses/anos
+        let sinceRel = '—';
+        if (firstSeen){
+          const diffMs = Date.now() - firstSeen.getTime();
+          const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          if (dias < 60){
+            sinceRel = `${dias} ${dias===1 ? 'dia' : 'dias'}`;
+          } else {
+            const meses = Math.floor(dias / 30);
+            if (meses < 24){
+              sinceRel = `${meses} ${meses===1 ? 'mês' : 'meses'}`;
+            } else {
+              const anos = Math.floor(meses / 12);
+              sinceRel = `${anos} ${anos===1 ? 'ano' : 'anos'}`;
+            }
+          }
+        }
+        const ttRole = 'Cargo no clã';
+        const ttTroph = 'Troféus do jogador';
+        const ttFame = 'Medalhas de guerra (atual)';
+        const ttCum = 'Medalhas de guerra (acumuladas)';
+        const ttMemberSince = sinceRel==='—' ? 'Membro —' : `Membro há ${sinceRel}`;
+        const expulse = (()=>{
+          // critério: >4 dias de membro e fame atual abaixo da mediana do clã em 30%
+          const days = firstSeen? Math.floor((Date.now()-firstSeen.getTime())/(1000*60*60*24)) : 0;
+          const fame = m.fame||0;
+          // estimativa simples de referência: média das fames exibidas
+          const fameref = data.reduce((acc,x)=>acc+(x.fame||0),0)/(data.length||1);
+          const low = days>4 && fame < (fameref*0.3);
+          return low ? '<span class="tt" data-tt="Área de expulsão: poucas medalhas">🚨</span>' : '';
+        })();
           return `
-            <li onclick="location.href='${toolUrl}?tag=${encodeURIComponent(m.tag)}'">
-              <span>${i + 1}. ${m.name}</span>
-              <span><span class="${cssRole[key]}">${rolePT[key] || m.role}</span> · ${m.trophies} troféus</span>
+          <li data-tag="${m.tag}" class="${rowCls}">
+            <span>${pos}. ${m.name} ${arrow} ${expulse}</span>
+            <span>
+              <span class='${cssRole[key]} tt' data-tt='${ttRole}'>${rolePT[key] || m.role}</span>
+              · <span class='tt' data-tt='${ttTroph}'>🏆 ${m.trophies} troféus</span>
+              · <span class='tt' data-tt='${ttFame}'>🏅 ${m.fame || 0}</span>
+              · <span class='tt' data-tt='${ttCum}'>🥇 ${m.fameTotal || 0}</span>
+              · <span class='tt' data-tt='${ttMemberSince}'>📅</span>
+            </span>
             </li>`;
-        }).join('')
-      : '<li>Nenhum membro encontrado.</li>';
+      }).join('');
+
+      // clique abre modal do jogador
+      document.querySelectorAll('#clanList li').forEach(li=>{
+        li.onclick = ()=> openPlayerModal(li.getAttribute('data-tag'));
+      })
+    }
+
+    renderMembers();
+
+    // Tooltip flutuante para evitar clipping
+    const tip = document.createElement('div');
+    tip.className = 'tooltip-floating';
+    document.body.appendChild(tip);
+
+    function attachTooltips(){
+      document.querySelectorAll('.tt').forEach(el=>{
+        el.addEventListener('mouseenter', e=>{
+          tip.textContent = el.getAttribute('data-tt')||'';
+          tip.style.opacity = '1';
+          const r = el.getBoundingClientRect();
+          tip.style.left = (r.left + r.width/2) + 'px';
+          tip.style.top  = (r.top - 6) + 'px';
+        });
+        el.addEventListener('mouseleave', ()=>{ tip.style.opacity = '0'; });
+      });
+    }
+    attachTooltips();
+
+    async function openPlayerModal(tag){
+      const modal = document.getElementById('playerModal');
+      const content = document.getElementById('pmContent');
+      const title = document.getElementById('pmTitle');
+      modal.style.display='block';
+      content.innerHTML='Carregando…';
+      try{
+        const [pRes,fRes,mRes] = await Promise.all([
+          fetch(`/api/player?tag=${encodeURIComponent(tag)}`),
+          fetch(`/api/player-fame?tag=${encodeURIComponent(tag)}`),
+          fetch(`/api/player-matches?tag=${encodeURIComponent(tag)}`)
+        ]);
+        const player = await pRes.json();
+        const fame = await fRes.json();
+        const matches = await mRes.json();
+        title.textContent = `${player.name} (${player.tag})`;
+        const deckArr = (player.currentDeck||[]);
+        const deck = deckArr.map(c=>c.name).join(', ');
+        const periods = fame.periods||[];
+        const roleTl = fame.roleTimeline||[];
+        const wrTl = fame.winRateTimeline||[];
+        // agrega vitórias/derrotas por ordem cronológica
+        const ordered = Array.isArray(matches)? [...matches].reverse() : [];
+        const labels = [];
+        const wins = []; const losses = [];
+        const modeSet = new Set();
+        let cumW=0, cumL=0;
+        ordered.forEach((b,i)=>{
+          const w = (b.team?.[0]?.crowns||0) > (b.opponent?.[0]?.crowns||0);
+          w?cumW++:cumL++;
+          labels.push(i+1);
+          wins.push({x:i+1,y:cumW});
+          losses.push({x:i+1,y:cumL});
+          if(b.gameMode?.name) modeSet.add(b.gameMode.name);
+        });
+        const modes=[...modeSet];
+        content.innerHTML = `
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-overview">Visão geral</button>
+            <button class="tab-btn" data-tab="tab-chart">Win‑rate</button>
+            <button class="tab-btn" data-tab="tab-cards">Cartas</button>
+            <button class="tab-btn" data-tab="tab-fame">Medalhas</button>
+            <button class="tab-btn" data-tab="tab-roles">Cargos</button>
+          </div>
+          <div class="tab-panel active" id="tab-overview">
+            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+                <p>🏆 ${player.trophies||'-'} · Liga: ${player.league?.leagueNumber||'-'}</p>
+                ${player.deckStats?`<p><strong>Win‑rate do deck atual:</strong> ${(player.deckStats.wins+player.deckStats.losses)>0 ? Math.round((player.deckStats.wins/(player.deckStats.wins+player.deckStats.losses))*100) : 0 }%
+              </div>
+              <div class="deck-grid" style="margin-top:.5rem">
+                ${deckArr.map(c=>{
+                  const icon = c.iconUrls?.medium||c.iconUrls?.small||'';
+                  return `<div class='deck-card tt' data-tt='${c.name}'>
+                    <img src='${icon}' alt='${c.name}'/>
+                    <span>${c.name}</span>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-chart">
+            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
+              <h4 style="margin-bottom:.5rem">Win‑rate</h4>
+              <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+                <label for="pmMode">Modo:</label>
+                <select id="pmMode"><option value="">Todos</option>${modes.map(m=>`<option>${m}</option>`).join('')}</select>
+              </div>
+              <div id="pmChartWrap" style="width:100%;height:300px;position:relative">
+                <canvas id="pmChart" style="width:100%;height:100%"></canvas>
+              </div>
+
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-cards">
+            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
+              <h4 style="margin-bottom:.5rem">Cartas em destaque (últimas 30)</h4>
+              <div style="display:grid;grid-template-columns:1fr;gap:1rem">
+                <div>
+                  <div style="margin-bottom:.35rem"><strong>✅ Cartas do jogador em vitórias</strong></div>
+                  <div id="pmPlayerCards" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+                </div>
+                <div>
+                  <div style="margin-bottom:.35rem"><strong>⚠️ Cartas dos oponentes em derrotas</strong></div>
+                  <div id="pmOppCards" style="display:flex;flex-wrap:wrap;gap:.5rem"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-fame">
+            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
+              <h4 style="margin-bottom:.5rem">Medalhas por corrida</h4>
+              <div>${periods.map(p=>`<div style='display:flex;justify-content:space-between'><span>${p.meta?.periodType||''} ${p.meta?.periodIndex??''}</span><span>🏅 ${p.total}</span></div>`).join('')||'—'}</div>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-roles">
+            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
+              <h4 style="margin-bottom:.5rem">Histórico de cargos</h4>
+              <div>${(roleTl||[]).map(r=>`<div>${new Date(r.ts).toLocaleDateString('pt-BR')} → ${r.role}</div>`).join('')||'—'}</div>
+            </div>
+          </div>`;
+
+        // tabs init
+        document.querySelectorAll('.tab-btn').forEach(btn=>{
+          btn.onclick=()=>{
+            document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+          };
+        });
+
+        // chart init
+        const ctx=document.getElementById('pmChart');
+        let chart;
+        function renderChart(filterMode=''){
+          let seq=0,cw=0;const winRate=[];
+          (Array.isArray(matches)? [...matches].reverse():[]).forEach(b=>{
+            if(filterMode && b.gameMode?.name!==filterMode) return;
+            seq+=1; const w=(b.team?.[0]?.crowns||0)>(b.opponent?.[0]?.crowns||0);
+            if(w) cw++; const wr=(cw/seq)*100; winRate.push({x:seq,y:wr});
+          });
+          chart?.destroy();
+          chart=new Chart(ctx,{type:'line',data:{datasets:[
+            {label:'Win‑rate %',data:winRate,borderColor:'#facc15',backgroundColor:'#facc15',tension:.15,fill:false}
+          ]},options:{parsing:false,responsive:true,maintainAspectRatio:false,
+            scales:{x:{type:'linear',title:{display:true,text:'Partida'}},y:{beginAtZero:true,min:0,max:100,title:{display:true,text:'%'}}},
+            plugins:{legend:{position:'bottom'}}
+          }});
+          // força tamanho do canvas ao wrapper para evitar expansão
+          const wrap=document.getElementById('pmChartWrap');
+          if(wrap){ ctx.width=wrap.clientWidth; ctx.height=wrap.clientHeight; }
+        }
+        function renderCards(filterMode=''){
+          const recentAll = (Array.isArray(matches)? matches.filter(b=>!filterMode||b.gameMode?.name===filterMode):[]);
+          const recent = recentAll.slice(0,30);
+          const prev = recentAll.slice(30,60);
+          const freqWin = new Map();
+          const freqLose = new Map();
+          const prevWin = new Map();
+          const prevLose = new Map();
+          recent.forEach(b=>{
+            if(filterMode && b.gameMode?.name!==filterMode) return;
+            const w=(b.team?.[0]?.crowns||0)>(b.opponent?.[0]?.crowns||0);
+            const teamCards=(b.team?.[0]?.cards||[]).map(c=>c.name);
+            const oppCards=(b.opponent?.[0]?.cards||[]).map(c=>c.name);
+            if(w){ teamCards.forEach(n=>freqWin.set(n,(freqWin.get(n)||0)+1)); }
+            else { oppCards.forEach(n=>freqLose.set(n,(freqLose.get(n)||0)+1)); }
+          });
+          prev.forEach(b=>{
+            if(filterMode && b.gameMode?.name!==filterMode) return;
+            const w=(b.team?.[0]?.crowns||0)>(b.opponent?.[0]?.crowns||0);
+            const teamCards=(b.team?.[0]?.cards||[]).map(c=>c.name);
+            const oppCards=(b.opponent?.[0]?.cards||[]).map(c=>c.name);
+            if(w){ teamCards.forEach(n=>prevWin.set(n,(prevWin.get(n)||0)+1)); }
+            else { oppCards.forEach(n=>prevLose.set(n,(prevLose.get(n)||0)+1)); }
+          });
+          const topWin=[...freqWin.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+          const topLose=[...freqLose.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+          const mkChip=(n,q,color,delta)=>`<span style="background:var(--card);border:1px solid ${color};border-radius:10px;padding:.35rem .6rem;font-size:.85rem;display:inline-flex;align-items:center;gap:.35rem">${n} (${q}) ${delta>0?'<span style=\"color:#22c55e\">⬆</span>':(delta<0?'<span style=\"color:#ef4444\">⬇</span>':'')}</span>`;
+          const pc=document.getElementById('pmPlayerCards');
+          const oc=document.getElementById('pmOppCards');
+          pc.innerHTML= topWin.length? topWin.map(([n,q])=>{
+            const prevQ=prevWin.get(n)||0; const delta=q-prevQ; return mkChip(n,q,'#22c55e',delta);
+          }).join('') : '—';
+          oc.innerHTML= topLose.length? topLose.map(([n,q])=>{
+            const prevQ=prevLose.get(n)||0; const delta=q-prevQ; return mkChip(n,q,'#ef4444',delta);
+          }).join('') : '—';
+        }
+
+        renderChart('');
+        renderCards('');
+        const pmMode=document.getElementById('pmMode');
+        pmMode.onchange=()=>{ renderChart(pmMode.value); renderCards(pmMode.value); };
+      }catch(e){ content.textContent='Erro ao carregar'; }
+      const close = document.getElementById('pmClose');
+      const back = document.getElementById('pmBackdrop');
+      function hide(){ modal.style.display='none'; }
+      close.onclick = hide; back.onclick = hide;
+    }
+
+    const orderBy = document.getElementById('orderBy');
+    const orderDd = document.getElementById('orderDd');
+    const orderBtn = document.getElementById('orderBtn');
+    const orderMenu = document.getElementById('orderMenu');
+    const orderLabel = document.getElementById('orderLabel');
+    if (orderBy){
+      orderBy.value = sortMode;
+      orderBy.onchange = () => { sortMode = orderBy.value; syncOrderUI(); renderMembers(); setTimeout(attachTooltips, 0); };
+    }
+
+    function syncOrderUI(){
+      const map = {default:'Ranking padrão', medals:'Medalhas acumuladas', current:'Medalhas (guerra atual)'};
+      orderLabel.textContent = map[sortMode] || '—';
+      document.querySelectorAll('#orderMenu .dd-item').forEach(i=>{
+        i.classList.toggle('active', i.getAttribute('data-val')===sortMode);
+      });
+    }
+    if (orderBtn && orderMenu && orderDd){
+      orderBtn.onclick = ()=>{ orderDd.classList.toggle('open'); };
+      orderMenu.querySelectorAll('.dd-item').forEach(i=>{
+        i.onclick = ()=>{ sortMode = i.getAttribute('data-val'); orderBy.value = sortMode; orderDd.classList.remove('open'); syncOrderUI(); renderMembers(); setTimeout(attachTooltips, 0); };
+      });
+      document.addEventListener('click', (e)=>{ if (!orderDd.contains(e.target)) orderDd.classList.remove('open'); });
+      syncOrderUI();
+    }
+
+    hidePreloader();
   })
   .catch(() => {
     clanHeader.style.display = 'none';
     clanList.innerHTML = '<li>Erro ao carregar dados.</li>';
+    hidePreloader();
   });
 
   </script>
 
 </body>
 </html>
+

@@ -1,0 +1,1159 @@
+{
+  "meta": {
+    "lastRaceKey": null,
+    "lastRanks": {}
+  },
+  "players": {
+    "#YJY9R90G0": {
+      "name": "Villa",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "leader"
+        }
+      ],
+      "lastRole": "leader",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:42.151267+00:00",
+          "wr": 50.0,
+          "n": 38
+        }
+      ]
+    },
+    "#LVUGCC8QG": {
+      "name": "donquixote",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "elder"
+        }
+      ],
+      "lastRole": "elder",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:43.275584+00:00",
+          "wr": 60.0,
+          "n": 40
+        }
+      ]
+    },
+    "#U2QJ9QJ9V": {
+      "name": "Joy",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "coLeader"
+        }
+      ],
+      "lastRole": "coLeader",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:44.492829+00:00",
+          "wr": 61.76,
+          "n": 34
+        }
+      ]
+    },
+    "#GQCQPRLLY": {
+      "name": "dea",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "coLeader"
+        }
+      ],
+      "lastRole": "coLeader",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:45.383012+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#PQ8V2V0LC": {
+      "name": "jhg",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:46.463122+00:00",
+          "wr": 30.56,
+          "n": 36
+        }
+      ]
+    },
+    "#RJGLR900R": {
+      "name": "Łuca§",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "coLeader"
+        }
+      ],
+      "lastRole": "coLeader",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:47.616887+00:00",
+          "wr": 55.0,
+          "n": 40
+        }
+      ]
+    },
+    "#VRVQCVP9U": {
+      "name": "esqueleto ☠️",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:48.547993+00:00",
+          "wr": 63.33,
+          "n": 30
+        }
+      ]
+    },
+    "#J2V8PC0LP": {
+      "name": "gio3.0",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:49.667404+00:00",
+          "wr": 52.5,
+          "n": 40
+        }
+      ]
+    },
+    "#U2YPUVPCQ": {
+      "name": "gabriel",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:50.813410+00:00",
+          "wr": 43.75,
+          "n": 32
+        }
+      ]
+    },
+    "#VYYJ82CLR": {
+      "name": "kabanhas",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:51.967369+00:00",
+          "wr": 66.67,
+          "n": 30
+        }
+      ]
+    },
+    "#VRU0PYJ90": {
+      "name": "Gabriel",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:53.079511+00:00",
+          "wr": 80.0,
+          "n": 30
+        }
+      ]
+    },
+    "#GYQRPG8G9": {
+      "name": "NOOB GOD",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:54.169124+00:00",
+          "wr": 70.0,
+          "n": 40
+        }
+      ]
+    },
+    "#8V8QPPCQ": {
+      "name": "VICTOR MANOELII",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:55.081107+00:00",
+          "wr": 90.0,
+          "n": 30
+        }
+      ]
+    },
+    "#V0C0C0PCV": {
+      "name": "BUZZI",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:56.147015+00:00",
+          "wr": 62.5,
+          "n": 32
+        }
+      ]
+    },
+    "#GYQ8R02UR": {
+      "name": "ASTRO ♡",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:57.034714+00:00",
+          "wr": 58.06,
+          "n": 31
+        }
+      ]
+    },
+    "#PCL89PU2V": {
+      "name": "Duxzin",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:57.929521+00:00",
+          "wr": 63.33,
+          "n": 30
+        }
+      ]
+    },
+    "#V9092PP": {
+      "name": "Cavalo_Voador",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:58.794824+00:00",
+          "wr": 53.33,
+          "n": 30
+        }
+      ]
+    },
+    "#VGLV8U9PU": {
+      "name": "SAM",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:48:59.691759+00:00",
+          "wr": 48.48,
+          "n": 33
+        }
+      ]
+    },
+    "#20LG8QY98P": {
+      "name": "gaucho",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:00.634925+00:00",
+          "wr": 80.0,
+          "n": 30
+        }
+      ]
+    },
+    "#VRCLU899Y": {
+      "name": "@eo_andry_",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:01.559162+00:00",
+          "wr": 76.67,
+          "n": 30
+        }
+      ]
+    },
+    "#892YCQYQ9": {
+      "name": "joao vinicius",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:02.414850+00:00",
+          "wr": 63.33,
+          "n": 30
+        }
+      ]
+    },
+    "#VQJUJLL8V": {
+      "name": "kauan_da_b15",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:03.616232+00:00",
+          "wr": 70.0,
+          "n": 30
+        }
+      ]
+    },
+    "#UQQ8P8U9V": {
+      "name": "PG chei d odio",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:04.464784+00:00",
+          "wr": 94.44,
+          "n": 18
+        }
+      ]
+    },
+    "#8R2UCPRL2": {
+      "name": "hector",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:05.538767+00:00",
+          "wr": 61.76,
+          "n": 34
+        }
+      ]
+    },
+    "#CY2LU2J0P": {
+      "name": "miguelgmax",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:06.419619+00:00",
+          "wr": 46.67,
+          "n": 30
+        }
+      ]
+    },
+    "#200YUQCV88": {
+      "name": "kauan",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:07.486840+00:00",
+          "wr": 47.06,
+          "n": 34
+        }
+      ]
+    },
+    "#VGYY2LRYY": {
+      "name": "Kaizen",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:08.381969+00:00",
+          "wr": 53.12,
+          "n": 32
+        }
+      ]
+    },
+    "#U0RRL0C2J": {
+      "name": "iTzUhChant’AL.",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:09.488460+00:00",
+          "wr": 43.33,
+          "n": 30
+        }
+      ]
+    },
+    "#R9LLJ8GCY": {
+      "name": "South Orchid",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:10.396231+00:00",
+          "wr": 63.33,
+          "n": 30
+        }
+      ]
+    },
+    "#UV00220VR": {
+      "name": "Osorio",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:11.497338+00:00",
+          "wr": 69.7,
+          "n": 33
+        }
+      ]
+    },
+    "#U8JY0URCG": {
+      "name": "dj shadow",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:12.418711+00:00",
+          "wr": 50.0,
+          "n": 30
+        }
+      ]
+    },
+    "#VC9RJJLC0": {
+      "name": "Allan",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:13.802088+00:00",
+          "wr": 70.0,
+          "n": 30
+        }
+      ]
+    },
+    "#UUVVGCJLJ": {
+      "name": "YungLice",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:15.040773+00:00",
+          "wr": 46.88,
+          "n": 32
+        }
+      ]
+    },
+    "#VRCRC2L20": {
+      "name": "ferreira77",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:15.947560+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#V89PP9U9Q": {
+      "name": "Samuelxl",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:16.866807+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#V8YPCV0PV": {
+      "name": "PIKA_ZEDONA",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:17.933842+00:00",
+          "wr": 70.0,
+          "n": 30
+        }
+      ]
+    },
+    "#UC0JVR9YR": {
+      "name": "Toddynho",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:18.783592+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#QJGLR9CV8": {
+      "name": "Muambeiro",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:19.652026+00:00",
+          "wr": 66.67,
+          "n": 30
+        }
+      ]
+    },
+    "#UVGPV8UC0": {
+      "name": "eduardo007",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:20.585016+00:00",
+          "wr": 70.0,
+          "n": 30
+        }
+      ]
+    },
+    "#208G2UQPGC": {
+      "name": "iiioo",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:21.451839+00:00",
+          "wr": 53.33,
+          "n": 30
+        }
+      ]
+    },
+    "#V2CCJPPCG": {
+      "name": "DIHÊNIO",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:22.323637+00:00",
+          "wr": 51.61,
+          "n": 31
+        }
+      ]
+    },
+    "#VRCGVVVVR": {
+      "name": "hugo-cbjr",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:23.182292+00:00",
+          "wr": 60.0,
+          "n": 30
+        }
+      ]
+    },
+    "#U28V9G0V8": {
+      "name": "manu",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:24.085383+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#20P829PUJR": {
+      "name": "Eduardo",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:24.945996+00:00",
+          "wr": 60.0,
+          "n": 30
+        }
+      ]
+    },
+    "#GQQURG29R": {
+      "name": "Xcrowley",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:25.825674+00:00",
+          "wr": 54.84,
+          "n": 31
+        }
+      ]
+    },
+    "#YR2CQRGVR": {
+      "name": "Vitor Emanuel",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:26.728263+00:00",
+          "wr": 66.67,
+          "n": 30
+        }
+      ]
+    },
+    "#VC2YRCVJR": {
+      "name": "Gabrielsemrobux",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:27.646823+00:00",
+          "wr": 56.67,
+          "n": 30
+        }
+      ]
+    },
+    "#VQJGPCR8V": {
+      "name": "pedro",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:28.479530+00:00",
+          "wr": 76.67,
+          "n": 30
+        }
+      ]
+    },
+    "#VPG2092QP": {
+      "name": "samyra",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:29.406925+00:00",
+          "wr": 71.43,
+          "n": 21
+        }
+      ]
+    },
+    "#Y8RRJ9JRY": {
+      "name": "gabriel035",
+      "total": 0,
+      "by_period": {},
+      "timeline": [],
+      "firstSeen": "2025-10-11T20:48:41.083154+00:00",
+      "lastSeen": "2025-10-11T20:48:41.083154+00:00",
+      "roleTimeline": [
+        {
+          "ts": "2025-10-11T20:48:41.083154+00:00",
+          "role": "member"
+        }
+      ],
+      "lastRole": "member",
+      "deckHistory": {},
+      "winRateTimeline": [
+        {
+          "ts": "2025-10-11T20:49:30.456615+00:00",
+          "wr": 73.33,
+          "n": 30
+        }
+      ]
+    }
+  },
+  "snapshots": {}
+}

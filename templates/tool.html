@@ -16,13 +16,13 @@
   <style>
   /* PALETA */
   :root{
-    --bg:#0d0d15;
+    --bg:#0f0a07;                   /* fundo escuro quente */
     --card:rgba(255,255,255,.05);
     --glass:rgba(255,255,255,.10);
     --fg:#f5f6fa;
-    --muted:#9ca3af;
-    --accent0:#4ade80;
-    --accent1:#16a34a;
+    --muted:#c8b7a6;                /* tom quente */
+    --accent0:#f59e0b;              /* âmbar */
+    --accent1:#ef4444;              /* vermelho */
     --radius:14px;
     --gap:1rem;
     --t:.25s cubic-bezier(.4,.0,.2,1);
@@ -61,9 +61,9 @@
     background:linear-gradient(90deg,var(--accent0),var(--accent1));
     color:#0d0d15;font-weight:600;border:none;cursor:pointer;
     transition:transform var(--t),box-shadow var(--t);
-    box-shadow:0 4px 12px rgba(22,163,74,.35);
+    box-shadow:0 4px 12px rgba(239,68,68,.35);
   }
-  button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,163,74,.45);}
+  button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(239,68,68,.45);} 
 
   /* CARTÕES GENÉRICOS */
   .card-block{
@@ -94,8 +94,8 @@
   .batalhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:var(--gap);}
   .match-card{transition:transform var(--t),box-shadow var(--t);}
   .match-card:hover{transform:translateY(-4px);box-shadow:0 6px 20px rgba(0,0,0,.35);}
-  .match-card.win{background:rgba(74,222,128,.13);}
-  .match-card.lose{background:rgba(239,68,68,.15);}
+  .match-card.win{background:rgba(245,158,11,.14);} 
+  .match-card.lose{background:rgba(239,68,68,.16);} 
   .arena-info{text-align:center;padding:var(--gap) var(--gap) .75rem;border-bottom:1px solid var(--glass);}
   .arena-info h3{font-size:1.1rem;color:var(--fg);}
   .arena-info span{display:block;font-size:.85rem;color:var(--muted);}
@@ -113,7 +113,25 @@
     background:var(--card);border:1px solid var(--accent1);color:var(--fg);
     padding:.45rem .7rem;font-size:.8rem;border-radius:8px;font-weight:600;
   }
-  .versus{align-self:center;font-size:1.6rem;font-weight:700;color:#e74c3c;}
+  .versus{align-self:center;font-size:1.6rem;font-weight:700;color:#ef4444;}
+
+  /* Funções visuais para cargos com gradiente animado, mais suave */
+  .coleader{font-weight:700;
+    background:linear-gradient(90deg,var(--accent0),#afffcb,var(--accent1));
+    -webkit-background-clip:text;color:transparent;background-size:300% 100%;
+    background-position:0% 50%;
+    animation:roll 6s linear infinite;text-shadow:0 0 6px rgba(78,255,183,.6);
+  }
+  .leader{font-weight:700;
+    background:linear-gradient(90deg,#fcd34d,#f59e0b,#fcd34d);
+    -webkit-background-clip:text;color:transparent;background-size:250% 100%;
+    background-position:0% 50%;
+    animation:roll 8s linear infinite;text-shadow:0 0 8px rgba(255,215,0,.7);
+  }
+  @keyframes roll{
+    0%{background-position:0% 50%;}
+    100%{background-position:100% 50%;}
+  }
 
   /* LISTAS EXTRAS */
   .cards-list{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}

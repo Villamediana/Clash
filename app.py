@@ -6,12 +6,17 @@ import re
 import subprocess
 import socket
 import time
+from datetime import datetime, timezone
+import threading
 
 app = Flask(__name__)
 
+# Config base
+CLAN_TAG = "#G9QY8GPR"
+
 # Configuração de proxy para desenvolvimento local (controle no código)
 # Ajuste para True para habilitar o uso de proxy e criação automática do túnel SSH
-USE_PROXY = False
+USE_PROXY = True
 PROXIES = {
     'http': 'socks5h://127.0.0.1:8080',
     'https': 'socks5h://127.0.0.1:8080'
@@ -43,11 +48,20 @@ def _is_socks_proxy_listening(host: str = "127.0.0.1", port: int = 8080, timeout
             pass
 
 def _start_ssh_tunnel_socks5():
+    # Se já houver um túnel ativo na porta 8080, apenas reutiliza
+    if _is_socks_proxy_listening():
+        print("Túnel SSH já está ativo em 127.0.0.1:8080. Reutilizando.")
+        return
     # Abre uma nova janela do PowerShell que solicitará a senha e manterá o túnel ativo
     print("Estabelecendo túnel SSH para 103.199.185.54. Insira a senha do usuário root na janela aberta...")
-    command = 'powershell -NoExit -Command "Write-Host \"Abrindo túnel: ssh -D 8080 -N root@103.199.185.54\"; ssh -D 8080 -N root@103.199.185.54"'
-    # Usa 'start' do cmd para abrir uma nova janela
-    subprocess.Popen(["cmd", "/c", "start", command], shell=False)
+    ps_command = "Write-Host 'Abrindo túnel: ssh -D 8080 -N root@103.199.185.54'; ssh -D 8080 -N root@103.199.185.54"
+    # Abre uma nova janela de console do PowerShell e mantém aberta (-NoExit)
+    subprocess.Popen([
+        "powershell.exe",
+        "-NoExit",
+        "-Command",
+        ps_command
+    ], creationflags=subprocess.CREATE_NEW_CONSOLE)
     # Aguarda o túnel ficar disponível (até 120s)
     max_wait_seconds = 120
     waited = 0
@@ -58,6 +72,158 @@ def _start_ssh_tunnel_socks5():
         print("Túnel SSH ativo em 127.0.0.1:8080.")
     else:
         print("Aviso: não foi possível detectar o túnel em 127.0.0.1:8080. Verifique a senha/janela do SSH.")
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _load_fame_history(path: str = "fame_history.json") -> dict:
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"meta": {"lastRaceKey": None, "lastRanks": {}}, "players": {}, "snapshots": {}}
+
+
+def _save_fame_history(data: dict, path: str = "fame_history.json") -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _deck_key(deck: list) -> str:
+    """Gera uma chave estável para um deck, priorizando IDs (mais robusto que nomes)."""
+    try:
+        parts = []
+        for c in (deck or []):
+            cid = c.get("id")
+            parts.append(str(cid) if cid is not None else (c.get("name") or ""))
+        parts = [p for p in parts if p]
+        parts.sort()
+        return ",".join(parts)
+    except Exception:
+        return ""
+
+
+def _cards_key(cards: list) -> str:
+    """Chave do deck a partir de uma lista de cartas de uma partida (team[*].cards)."""
+    try:
+        parts = []
+        for c in (cards or []):
+            cid = c.get("id")
+            parts.append(str(cid) if cid is not None else (c.get("name") or ""))
+        parts = [p for p in parts if p]
+        parts.sort()
+        return ",".join(parts)
+    except Exception:
+        return ""
+
+
+def _derive_race_key(rr_json: dict) -> str:
+    # tenta campos oficiais; cai para semana do ano se faltar
+    period_type = rr_json.get("periodType") or rr_json.get("sectionType") or "unknown"
+    section_index = rr_json.get("sectionIndex")
+    period_index = rr_json.get("periodIndex")
+    season_id = rr_json.get("seasonId") or rr_json.get("season")
+    base = f"{period_type}-{section_index}-{period_index}-{season_id}"
+    if base.replace("None", "").strip("-"):
+        return base
+    # fallback simples: ano-semana
+    return f"wk-{time.gmtime().tm_year}-{time.gmtime().tm_yday // 7}"
+
+
+def _update_fame_history(rr_json: dict, participants: list) -> tuple[dict, dict, str]:
+    """Atualiza histórico; retorna (totais_por_tag, rank_delta_por_tag, race_key)."""
+    history = _load_fame_history()
+    race_key = _derive_race_key(rr_json)
+    snapshots = history.setdefault("snapshots", {})
+    prev_snapshot = snapshots.get(race_key, {})
+    # Salva metadados do período para rótulos
+    period_meta = history.setdefault("periodMeta", {})
+    period_meta[race_key] = {
+        "periodType": rr_json.get("periodType"),
+        "sectionIndex": rr_json.get("sectionIndex"),
+        "periodIndex": rr_json.get("periodIndex"),
+        "seasonId": rr_json.get("seasonId")
+    }
+
+    # acumula deltas
+    for p in participants:
+        tag = p.get("tag")
+        if not tag:
+            continue
+        curr = int(p.get("fame") or 0)
+        prev = int(prev_snapshot.get(tag) or 0)
+        delta = max(0, curr - prev)
+
+        player = history.setdefault("players", {}).setdefault(tag, {"name": p.get("name"), "total": 0, "by_period": {}, "timeline": []})
+        # mantém nome atualizado
+        if p.get("name"):
+            player["name"] = p["name"]
+        # atualiza totais
+        player["total"] = int(player.get("total", 0)) + int(delta)
+        byp = player["by_period"].setdefault(race_key, {"total": 0})
+        byp["total"] = int(byp.get("total", 0)) + int(delta)
+        if delta > 0:
+            player["timeline"].append({"ts": _now_iso(), "raceKey": race_key, "delta": delta, "current": curr})
+
+        # atualiza snapshot atual
+        prev_snapshot[tag] = curr
+
+    # salva snapshot novo
+    snapshots[race_key] = prev_snapshot
+
+    # calcula ranking e deltas
+    totals = {t: history["players"][t]["total"] for t in history.get("players", {})}
+    ordered = sorted(totals.items(), key=lambda kv: (-kv[1], kv[0]))
+    new_ranks = {tag: i + 1 for i, (tag, _val) in enumerate(ordered)}
+    last_ranks = history.get("meta", {}).get("lastRanks", {})
+    rank_delta = {tag: (last_ranks.get(tag, new_ranks[tag]) - new_ranks[tag]) for tag in new_ranks}
+
+    # persiste metadados de mudança de ranking (direção e timestamp) por jogador
+    for tag, delta in rank_delta.items():
+        try:
+            player = history.setdefault("players", {}).setdefault(tag, {"name": None, "total": 0, "by_period": {}, "timeline": []})
+            if delta != 0:
+                player["rankLastDelta"] = 1 if delta > 0 else -1
+                player["rankLastChangeTs"] = _now_iso()
+        except Exception:
+            pass
+    history.setdefault("meta", {})["lastRanks"] = new_ranks
+    history["meta"]["lastRaceKey"] = race_key
+
+    _save_fame_history(history)
+
+    return totals, rank_delta, race_key
+
+
+def _update_members_first_seen(members: list) -> None:
+    """Atualiza firstSeen/lastSeen para os membros do clã no histórico."""
+    history = _load_fame_history()
+    players = history.setdefault("players", {})
+    now_iso = _now_iso()
+    for m in members or []:
+        tag = m.get("tag")
+        if not tag:
+            continue
+        entry = players.setdefault(tag, {"name": m.get("name"), "total": 0, "by_period": {}, "timeline": []})
+        if m.get("name"):
+            entry["name"] = m["name"]
+        if not entry.get("firstSeen"):
+            entry["firstSeen"] = now_iso
+        entry["lastSeen"] = now_iso
+        # histórico de cargo / promoções
+        try:
+            current_role = m.get("role")
+            if current_role:
+                if entry.get("lastRole") != current_role:
+                    entry.setdefault("roleTimeline", []).append({"ts": now_iso, "role": current_role})
+                entry["lastRole"] = current_role
+        except Exception:
+            pass
+    _save_fame_history(history)
 
 def get_headers():
     return {
@@ -90,8 +256,7 @@ def tool():
 
 @app.route("/api/clan-info")
 def clan_info():
-    clan_tag = "#G8YQ28JP"
-    tag_enc = clan_tag.replace("#", "%23")
+    tag_enc = CLAN_TAG.replace("#", "%23")
     info_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}"
 
     try:
@@ -124,6 +289,71 @@ def clan_info():
         app.logger.exception("Erro ao buscar membros do clã")
         members = []
 
+    # Enriquecer com 'fame' da guerra atual (River Race)
+    fame_by_tag = {}
+    try:
+        rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}/currentriverrace"
+        rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+        if rr_resp.status_code == 200:
+            rr = rr_resp.json()
+            # Estrutura esperada: { "clan": { "participants": [ { tag, fame, ... } ] } }
+            participants = (
+                (rr.get("clan") or {}).get("participants")
+                or rr.get("participants")
+                or []
+            )
+            fame_by_tag = {p.get("tag"): p.get("fame", 0) for p in participants if p.get("tag")}
+            # Atualiza histórico a partir da corrida atual
+            try:
+                totals, rank_delta, race_key = _update_fame_history(rr, participants)
+            except Exception:
+                totals, rank_delta, race_key = {}, {}, None
+            # Também atualiza firstSeen/lastSeen a partir da lista de membros atual
+            try:
+                _update_members_first_seen(members)
+            except Exception:
+                pass
+        else:
+            rr = {}
+            totals, rank_delta, race_key = {}, {}, None
+    except Exception:
+        # Se falhar, apenas segue sem fame
+        fame_by_tag = {}
+        rr = {}
+        totals, rank_delta, race_key = {}, {}, None
+
+    for m in members:
+        try:
+            m["fame"] = fame_by_tag.get(m.get("tag"), 0)
+        except Exception:
+            m["fame"] = 0
+        # totais cumulativos (podem não existir se histórico não conseguiu atualizar)
+        m["fameTotal"] = (totals.get(m.get("tag")) if 'totals' in locals() else None) or 0
+        m["rankDelta"] = (rank_delta.get(m.get("tag")) if 'rank_delta' in locals() else None) or 0
+        # firstSeen
+        try:
+            hist_players = _load_fame_history().get("players", {})
+            player_hist = (hist_players.get(m.get("tag"), {}) or {})
+            m["firstSeen"] = player_hist.get("firstSeen")
+            # seta persistente por 24h após a última mudança
+            last_change = player_hist.get("rankLastChangeTs")
+            last_dir = player_hist.get("rankLastDelta")  # 1 up, -1 down
+            if last_change and last_dir:
+                try:
+                    ts = datetime.fromisoformat(last_change.replace('Z','+00:00'))
+                    hours = (datetime.now(timezone.utc) - ts).total_seconds() / 3600.0
+                    if hours < 24:
+                        m["rankDeltaSticky"] = 1 if int(last_dir) > 0 else -1
+                    else:
+                        m["rankDeltaSticky"] = 0
+                except Exception:
+                    m["rankDeltaSticky"] = 0
+            else:
+                m["rankDeltaSticky"] = 0
+        except Exception:
+            m["firstSeen"] = None
+            m["rankDeltaSticky"] = 0
+
     return jsonify({
         "clan": {
             "name": info.get("name"),
@@ -131,14 +361,33 @@ def clan_info():
             "membersCount": info.get("members"),
             "clanScore": info.get("clanScore"),
             "clanWarTrophies": info.get("clanWarTrophies"),
-            "badgeUrl": badge_url
+            "badgeUrl": badge_url,
+            # Campo de criação do clã (usa valor da API, senão usa data fixa solicitada)
+            "createdAt": (
+                info.get("createdDate")
+                or info.get("creationDate")
+                or info.get("createdTime")
+                or info.get("created")
+                or "2025-09-15T00:00:00Z"
+            ),
+            "riverRace": {
+                "periodType": (rr.get("periodType") if 'rr' in locals() else None),
+                "sectionIndex": (rr.get("sectionIndex") if 'rr' in locals() else None),
+                "periodIndex": (rr.get("periodIndex") if 'rr' in locals() else None),
+                "seasonId": (rr.get("seasonId") if 'rr' in locals() else None)
+            }
         },
         "memberList": [
             {
                 "name": m.get("name"),
                 "tag": m.get("tag"),
                 "role": m.get("role"),
-                "trophies": m.get("trophies")
+                "trophies": m.get("trophies"),
+                "fame": m.get("fame", 0),
+                "fameTotal": m.get("fameTotal", 0),
+                "rankDelta": m.get("rankDelta", 0),
+                "rankDeltaSticky": m.get("rankDeltaSticky", 0),
+                "firstSeen": m.get("firstSeen")
             }
             for m in members
         ]
@@ -182,6 +431,103 @@ def historico():
 @app.route("/api/cartas")
 def cartas():
     return jsonify(get_cartas_api())
+
+
+@app.route("/api/player")
+def api_player():
+    tag = request.args.get("tag", "").strip()
+    if not tag:
+        return jsonify({"error": "tag requerida"}), 400
+    tag_enc = tag.replace("#", "%23")
+    url = f"https://api.clashroyale.com/v1/players/{tag_enc}"
+    try:
+        resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        return jsonify({"error": "falha ao buscar player", "detail": str(e)}), 500
+    # extrai deck atual (se existir)
+    deck = data.get("currentDeck") or data.get("cards") or []
+    # atualiza histórico de deck e winrate por deck
+    try:
+        hist = _load_fame_history()
+        players = hist.setdefault("players", {})
+        p = players.setdefault(tag, {"name": data.get("name"), "total": 0, "by_period": {}, "timeline": []})
+        dk = _deck_key(deck)
+        now = _now_iso()
+        dh = p.setdefault("deckHistory", {})
+        curr = dh.get("current", {})
+        if curr.get("key") != dk:
+            # troca de deck: arquiva e inicia novo
+            if curr.get("key"):
+                past = p.setdefault("pastDecks", [])
+                past.append(curr)
+            dh["current"] = {"key": dk, "since": now, "wins": 0, "losses": 0}
+        # nota: wins/losses alimentados pelo updater de partidas quando disponível
+        _save_fame_history(hist)
+    except Exception:
+        pass
+    # agrega win/loss do deck atual se existir no histórico
+    deck_stats = None
+    try:
+        hist = _load_fame_history()
+        p = hist.get("players", {}).get(tag)
+        curr = (p or {}).get("deckHistory", {}).get("current") or {}
+        if curr.get("key"):
+            deck_stats = {"wins": int(curr.get("wins") or 0), "losses": int(curr.get("losses") or 0), "since": curr.get("since")}
+    except Exception:
+        deck_stats = None
+
+    return jsonify({
+        "name": data.get("name"),
+        "tag": data.get("tag"),
+        "trophies": data.get("trophies"),
+        "league": (data.get("leagueStatistics") or {}).get("currentSeason"),
+        "currentDeck": deck,
+        "deckStats": deck_stats
+    })
+
+
+@app.route("/api/player-fame")
+def api_player_fame():
+    tag = request.args.get("tag", "").strip()
+    if not tag:
+        return jsonify({"error": "tag requerida"}), 400
+    hist = _load_fame_history()
+    p = hist.get("players", {}).get(tag)
+    periods = hist.get("periodMeta", {})
+    if not p:
+        return jsonify({"periods": [], "totals": {}})
+    byp = p.get("by_period", {})
+    # mapeia para lista ordenada por chave para front
+    items = []
+    for k, v in byp.items():
+        meta = periods.get(k, {})
+        items.append({"raceKey": k, "total": v.get("total", 0), "meta": meta})
+    items.sort(key=lambda x: x["raceKey"])  # simples
+    return jsonify({
+        "periods": items,
+        "totalCumulative": p.get("total", 0),
+        "roleTimeline": p.get("roleTimeline", []),
+        "winRateTimeline": p.get("winRateTimeline", [])
+    })
+
+
+@app.route("/api/player-matches")
+def api_player_matches():
+    tag = request.args.get("tag", "").strip()
+    if not tag:
+        return jsonify({"error": "tag requerida"}), 400
+    tag_enc = tag.replace("#", "%23")
+    url = f"https://api.clashroyale.com/v1/players/{tag_enc}/battlelog"
+    try:
+        resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception as e:
+        return jsonify({"error": "falha ao buscar partidas", "detail": str(e)}), 500
+    # retornamos as últimas N partidas (a API geralmente entrega ~25-50)
+    return jsonify(data)
 
 @app.route("/api/estatisticas-cartas")
 def estatisticas_cartas():
@@ -235,5 +581,111 @@ def estatisticas_cartas():
 if __name__ == "__main__":
     if USE_PROXY:
         _start_ssh_tunnel_socks5()
+
+    # Inicia atualizador em background (evita rodar duas vezes no reloader)
+    def _bg_updater():
+        while True:
+            try:
+                tag_enc_local = CLAN_TAG.replace("#", "%23")
+                rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/currentriverrace"
+                rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+                if rr_resp.status_code == 200:
+                    rr = rr_resp.json()
+                    participants = ((rr.get("clan") or {}).get("participants") or rr.get("participants") or [])
+                    # Atualiza histórico
+                    _update_fame_history(rr, participants)
+                    # Atualiza firstSeen/lastSeen capturando membros atuais
+                    members_url_local = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/members"
+                    m_resp = requests.get(members_url_local, headers=get_headers(), proxies=PROXIES)
+                    if m_resp.status_code == 200:
+                        m_json = m_resp.json()
+                        members_local = m_json.get("memberList") or m_json.get("items") or []
+                        _update_members_first_seen(members_local)
+                    # Atualiza winrate por deck para membros com partidas recentes
+                    try:
+                        hist = _load_fame_history()
+                        players = hist.setdefault("players", {})
+                        for m in (members_local or []):
+                            mt = m.get("tag")
+                            if not mt:
+                                continue
+                            # pega partidas
+                            try:
+                                pl = requests.get(f"https://api.clashroyale.com/v1/players/{mt.replace('#','%23')}/battlelog", headers=get_headers(), proxies=PROXIES)
+                                if pl.status_code==200:
+                                    bl = pl.json()
+                                    # usa últimas 50 para janela
+                                    bl = bl[:50]
+                                    # tenta identificar deck do time
+                                    p = players.setdefault(mt, {"name": m.get("name"), "total": 0, "by_period": {}, "timeline": []})
+                                    dh = p.setdefault("deckHistory", {})
+                                    curr = dh.get("current") or {}
+                                    key = curr.get("key") or ""
+                                    if key:
+                                        w,l=0,0
+                                        for b in bl:
+                                            team = (b.get('team') or [{}])[0]
+                                            opp = (b.get('opponent') or [{}])[0]
+                                            dkey = _cards_key(team.get('cards') or [])
+                                            if dkey==key:
+                                                if (team.get('crowns') or 0)>(opp.get('crowns') or 0): w+=1
+                                                else: l+=1
+                                        curr['wins']=w; curr['losses']=l
+                                        dh['current']=curr
+                                    players[mt]=p
+                                    # snapshot de winrate geral (todas partidas)
+                                    try:
+                                        cw,cl=0,0
+                                        for b in bl:
+                                            team = (b.get('team') or [{}])[0]
+                                            opp = (b.get('opponent') or [{}])[0]
+                                            if (team.get('crowns') or 0)>(opp.get('crowns') or 0): cw+=1
+                                            else: cl+=1
+                                        wr = (cw/(cw+cl))*100 if (cw+cl)>0 else 0
+                                        tl = p.setdefault('winRateTimeline', [])
+                                        tl.append({'ts': _now_iso(), 'wr': round(wr,2), 'n': cw+cl})
+                                        # limita tamanho
+                                        if len(tl)>720:
+                                            del tl[:len(tl)-720]
+                                    except Exception:
+                                        pass
+                                    _save_fame_history(hist)
+                            except Exception:
+                                continue
+                    except Exception:
+                        pass
+            except Exception as e:
+                try:
+                    app.logger.warning(f"Atualizador de fama falhou: {e}")
+                except Exception:
+                    pass
+            time.sleep(60*60)  # a cada 1h
+
+    try:
+        import os as _os
+        if _os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not app.debug:
+            t = threading.Thread(target=_bg_updater, daemon=True)
+            t.start()
+    except Exception:
+        pass
+
+    # Atualiza imediatamente na inicialização para que a página já traga dados frescos
+    try:
+        tag_enc_local = CLAN_TAG.replace("#", "%23")
+        rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/currentriverrace"
+        rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+        if rr_resp.status_code == 200:
+            rr = rr_resp.json()
+            participants = ((rr.get("clan") or {}).get("participants") or rr.get("participants") or [])
+            _update_fame_history(rr, participants)
+            members_url_local = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/members"
+            m_resp = requests.get(members_url_local, headers=get_headers(), proxies=PROXIES)
+            if m_resp.status_code == 200:
+                m_json = m_resp.json()
+                members_local = m_json.get("memberList") or m_json.get("items") or []
+                _update_members_first_seen(members_local)
+    except Exception:
+        pass
+
     app.run(host="0.0.0.0", port=5001, debug=True)
 
