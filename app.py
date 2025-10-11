@@ -6,12 +6,19 @@ import re
 
 app = Flask(__name__)
 
-TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjE1NjI5YWFkLTU4YzgtNGJhMS1iZjY5LTFjMmRhZTRjNTlmOSIsImlhdCI6MTc2MDIwMDc5Miwic3ViIjoiZGV2ZWxvcGVyLzI5ZDU1N2YzLTc1MTUtNDNhYy04YjI4LWYwMzRhMThiN2MxYyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxMDMuMTk5LjE4NS41NCJdLCJ0eXBlIjoiY2xpZW50In1dfQ.XG_prMXFJcLndC_YpsmQuJAm36OLyXs-8Xm2zel_369Uib81EHT3JUBnyH8gCfeswzpE6ghbIRR2O9cpYzAPOA"
+# Configuração de proxy para desenvolvimento local
+USE_PROXY = os.environ.get('USE_PROXY', 'false').lower() == 'true'
+PROXIES = {
+    'http': 'socks5h://127.0.0.1:8080',
+    'https': 'socks5h://127.0.0.1:8080'
+} if USE_PROXY else None
+
+TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjRiNDYzOTRmLWJhN2UtNDhiYS1hNTY0LWQ0NDdjZjRlYTk0MSIsImlhdCI6MTc2MDIwMTYxNywic3ViIjoiZGV2ZWxvcGVyLzI5ZDU1N2YzLTc1MTUtNDNhYy04YjI4LWYwMzRhMThiN2MxYyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxMDMuMTk5LjE4NS41NCJdLCJ0eXBlIjoiY2xpZW50In1dfQ.hrj4c012WJ3YunuBL2AzroxSG_SxQv8QG0VDpN6IH1YyuNymNW6m92GEjyfKH-yZBuH8Pdzz8HmuWVnGoKJcYA"
 BADGE_MAPPING_URL = "https://royaleapi.github.io/cr-api-data/json/alliance_badges.json"
 
 # Carrega mapeamento de badgeId → name (uma vez, na inicialização)
 try:
-    badge_mapping = requests.get(BADGE_MAPPING_URL).json()
+    badge_mapping = requests.get(BADGE_MAPPING_URL, proxies=PROXIES).json()
 except Exception as e:
     app.logger.error(f"Erro ao carregar badge mapping: {e}")
     badge_mapping = []
@@ -24,13 +31,13 @@ def get_headers():
 
 def get_cartas_api():
     url = "https://api.clashroyale.com/v1/cards"
-    resp = requests.get(url, headers=get_headers())
+    resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
     return resp.json() if resp.status_code == 200 else {"items": []}
 
 def fetch_batalhas(tag, tipos):
     tag_enc = tag.replace("#", "%23")
     url = f"https://api.clashroyale.com/v1/players/{tag_enc}/battlelog"
-    resp = requests.get(url, headers=get_headers())
+    resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
     if resp.status_code == 200:
         data = resp.json()
         return [b for b in data if b.get("type") in tipos] if tipos else data
@@ -52,7 +59,7 @@ def clan_info():
     info_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}"
 
     try:
-        info_resp = requests.get(info_url, headers=get_headers())
+        info_resp = requests.get(info_url, headers=get_headers(), proxies=PROXIES)
         info_resp.raise_for_status()
     except Exception as e:
         app.logger.exception("Erro ao buscar informações do clã")
@@ -73,7 +80,7 @@ def clan_info():
     # Busca membros do clã
     members_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}/members"
     try:
-        members_resp = requests.get(members_url, headers=get_headers())
+        members_resp = requests.get(members_url, headers=get_headers(), proxies=PROXIES)
         members_resp.raise_for_status()
         members_json = members_resp.json()
         members = members_json.get("memberList") or members_json.get("items") or []
