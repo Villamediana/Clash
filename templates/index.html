@@ -243,6 +243,57 @@
           </div>
         </div>
       </div>
+      <!-- Onboarding (primeira visita) -->
+      <div id="onboardModal" style="display:none;position:fixed;inset:0;z-index:9999;">
+        <div id="obBackdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);"></div>
+        <div style="position:relative;max-width:980px;margin:6vh auto;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:1rem;box-shadow:0 24px 64px rgba(0,0,0,.65);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem;border-bottom:1px solid var(--glass)">
+            <h3 style="font-size:1.2rem">Bem‑vindo! Como usar esta página do clã</h3>
+            <button id="obClose" style="background:linear-gradient(135deg,var(--accent0),var(--accent1));color:#0d0d15;border:none;border-radius:10px;padding:.4rem .7rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)">Entendi</button>
+          </div>
+          <div style="padding:1rem;max-height:70vh;overflow:auto;display:grid;gap:1rem">
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Lista de membros</h4>
+              <ul style="display:grid;gap:.45rem;list-style:disc;margin-left:1.25rem">
+                <li>Mostra o <strong>ranking</strong> dos jogadores. Setas ⬆/⬇ indicam mudanças recentes.</li>
+                <li>Exibe <strong>cargo</strong>, <strong>troféus</strong>, <strong>medalhas da corrida atual</strong> (🏅) e <strong>medalhas acumuladas</strong> (🥇).</li>
+                <li>Clique em um membro para abrir o <strong>painel detalhado</strong>.</li>
+              </ul>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Por que as medalhas acumuladas importam?</h4>
+              <p style="color:var(--muted)">As medalhas acumuladas (🥇) refletem contribuição ao longo do tempo. Elas ajudam a valorizar consistência e comprometimento. Use o controle <strong>Ordenar por → Medalhas acumuladas</strong> para ver quem mais contribuiu historicamente.</p>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Zona de perigo de expulsão</h4>
+              <p style="color:var(--muted)">Jogadores com mais de 4 dias no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Win‑rate do deck e do jogador</h4>
+              <ul style="display:grid;gap:.45rem;list-style:disc;margin-left:1.25rem">
+                <li>No painel do jogador, veja o <strong>win‑rate do deck atual</strong> e um gráfico de <strong>win‑rate</strong> por partida.</li>
+                <li>Use isso para decidir <strong>ajustes de deck</strong> ou <strong>modos</strong> onde o desempenho é melhor.</li>
+              </ul>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Cartas que mais te derrotam</h4>
+              <p style="color:var(--muted)">Na aba <strong>Cartas</strong> do painel, a seção “⚠️ Cartas dos oponentes em derrotas” mostra quais cartas mais causam derrotas. Planeje <strong>contra‑respostas</strong> adicionando cartas que lidem bem com elas.</p>
+            </div>
+            <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
+              <h4 style="margin-bottom:.5rem">Filtros e dicas</h4>
+              <ul style="display:grid;gap:.45rem;list-style:disc;margin-left:1.25rem">
+                <li>Use a <strong>busca</strong> para filtrar por nome, troféus (digite números) ou cargo (líder, colíder, ancião, membro).</li>
+                <li>Use <strong>Ordenar por</strong> para alternar entre ranking padrão, medalhas acumuladas e medalhas da corrida atual.</li>
+                <li>Passe o mouse nos ícones com <strong>pontinhos</strong> para ver <strong>dicas</strong> rápidas.</li>
+              </ul>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:.5rem;padding:.5rem;border-top:1px solid var(--glass)">
+            <button id="obNever" style="background:var(--card);border:1px solid var(--glass);color:var(--fg);border-radius:10px;padding:.45rem .8rem;cursor:pointer">Não mostrar novamente</button>
+            <button id="obClose2" style="background:linear-gradient(135deg,var(--accent0),var(--accent1));color:#0d0d15;border:none;border-radius:10px;padding:.45rem .9rem;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35)">Começar</button>
+          </div>
+        </div>
+      </div>
       <div class="list-controls">
         <label for="orderBy">Ordenar por</label>
         <div class="dd" id="orderDd">
@@ -511,6 +562,27 @@
     }
     attachTooltips();
 
+    // Onboarding (primeira visita)
+    function openOnboardingIfNeeded(){
+      try{
+        const key='av_onboarding_seen_v1';
+        const modal=document.getElementById('onboardModal');
+        const never=document.getElementById('obNever');
+        const close=document.getElementById('obClose');
+        const close2=document.getElementById('obClose2');
+        const back=document.getElementById('obBackdrop');
+        if(!modal) return;
+        const first=!localStorage.getItem(key);
+        function hide(){ modal.style.display='none'; }
+        function show(){ modal.style.display='block'; }
+        if(first){ show(); }
+        if(never){ never.onclick=()=>{ localStorage.setItem(key,'1'); hide(); }; }
+        if(close){ close.onclick=hide; }
+        if(close2){ close2.onclick=hide; }
+        if(back){ back.onclick=hide; }
+      }catch(e){ /* silencioso */ }
+    }
+
     async function openPlayerModal(tag){
       const modal = document.getElementById('playerModal');
       const content = document.getElementById('pmContent');
@@ -721,11 +793,13 @@
     }
 
     hidePreloader();
+    openOnboardingIfNeeded();
   })
   .catch(() => {
     clanHeader.style.display = 'none';
     clanList.innerHTML = '<li>Erro ao carregar dados.</li>';
     hidePreloader();
+    openOnboardingIfNeeded();
   });
 
   </script>
