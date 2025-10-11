@@ -476,7 +476,7 @@
             <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
                 <p>🏆 ${player.trophies||'-'} · Liga: ${player.league?.leagueNumber||'-'}</p>
-                ${player.deckStats?`<p><strong>Win‑rate do deck atual:</strong> ${(player.deckStats.wins+player.deckStats.losses)>0 ? Math.round((player.deckStats.wins/(player.deckStats.wins+player.deckStats.losses))*100) : 0 }%
+                ${player.deckStats ? `<p><strong>Win‑rate do deck atual:</strong> ${ (player.deckStats.wins+player.deckStats.losses)>0 ? Math.round((player.deckStats.wins/(player.deckStats.wins+player.deckStats.losses))*100) : 0 }%</p>` : ''}
               </div>
               <div class="deck-grid" style="margin-top:.5rem">
                 ${deckArr.map(c=>{
