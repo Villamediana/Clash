@@ -470,7 +470,6 @@
             <button class="tab-btn" data-tab="tab-chart">Win‑rate</button>
             <button class="tab-btn" data-tab="tab-cards">Cartas</button>
             <button class="tab-btn" data-tab="tab-fame">Medalhas</button>
-            <button class="tab-btn" data-tab="tab-roles">Cargos</button>
           </div>
           <div class="tab-panel active" id="tab-overview">
             <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
@@ -523,12 +522,7 @@
               <div>${periods.map(p=>`<div style='display:flex;justify-content:space-between'><span>${p.meta?.periodType||''} ${p.meta?.periodIndex??''}</span><span>🏅 ${p.total}</span></div>`).join('')||'—'}</div>
             </div>
           </div>
-          <div class="tab-panel" id="tab-roles">
-            <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
-              <h4 style="margin-bottom:.5rem">Histórico de cargos</h4>
-              <div>${(roleTl||[]).map(r=>`<div>${new Date(r.ts).toLocaleDateString('pt-BR')} → ${r.role}</div>`).join('')||'—'}</div>
-            </div>
-          </div>`;
+          `;
 
         // tabs init
         document.querySelectorAll('.tab-btn').forEach(btn=>{
