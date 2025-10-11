@@ -82,7 +82,7 @@
         -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:2rem;}
     .container{max-width:740px;margin-inline:auto;}
 
-    .list-controls{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;margin:0 0 1rem;}
+    .list-controls{display:flex;justify-content:flex-end;align-items:center;gap:.6rem;margin:0 0 1rem;position:sticky;top:0;z-index:7;background:var(--bg);padding-top:.25rem;padding-bottom:.25rem}
     .list-controls label{font-size:.85rem;color:var(--muted);} 
     .list-controls .dd{position:relative;display:inline-block}
     /* Ocultamos o select nativo e usamos um dropdown custom, mantendo o select para acessibilidade/estado */
@@ -122,15 +122,15 @@
       z-index:2147483647;font-size:.8rem;pointer-events:none;opacity:0;transition:opacity .12s ease;
     }
 
-    .clan-header{display:flex;align-items:center;gap:var(--gap);background:var(--card);padding:var(--gap);
-                 border-radius:var(--radius);backdrop-filter:blur(10px);box-shadow:0 6px 22px rgba(0,0,0,.4);}
+    .clan-header{display:flex;flex-direction:column;align-items:stretch;gap:var(--gap);background:var(--card);padding:var(--gap);
+                 border-radius:var(--radius);backdrop-filter:blur(10px);box-shadow:0 6px 22px rgba(0,0,0,.4);
+                 position:sticky;top:48px;z-index:6}
     /* removemos o emblema aqui */
     .clan-header .meta{display:flex;flex-direction:column;gap:.25rem}
     .clan-header h3{font-size:1.25rem;margin-bottom:.25rem;}
     .clan-header p{font-size:.95rem;color:var(--muted);}
 
-    .clan-list{margin-top:var(--gap);list-style:none;display:flex;flex-direction:column;gap:.75rem;
-               max-height:420px;overflow-y:auto;}
+    .clan-list{margin-top:var(--gap);list-style:none;display:flex;flex-direction:column;gap:.75rem;max-height:none;overflow:visible;}
     .clan-list li{
       display:flex;justify-content:space-between;align-items:center;
       padding:1.2rem 1.5rem;           /* itens mais largos */
@@ -157,6 +157,19 @@
       cursor:pointer;                 /* reforça pointer */
     }
     .clan-list span:last-child{font-size:.85rem;color:var(--muted);}
+
+    /* Zona de perigo de expulsão */
+    .danger-section{margin-top:2rem}
+    /* Search bar dentro do header */
+    .clan-search{display:block}
+    .clan-search input{width:100%;padding:.75rem 1rem;font-size:1rem;border-radius:12px;border:1px solid var(--glass);background:var(--glass);color:var(--fg);outline:none}
+    .clan-search input::placeholder{color:var(--muted)}
+    .danger-header{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:.5rem}
+    .danger-header h3{font-size:1.05rem}
+    .danger-header p{font-size:.9rem;color:var(--muted)}
+    .danger-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+    .danger-list li{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-radius:var(--radius);background:var(--card);border:1px solid rgba(239,68,68,.35)}
+    .danger-list .meta{font-size:.9rem;color:var(--muted)}
 
     .member{font-weight:400;}
     .elder{font-weight:700;}
@@ -252,10 +265,20 @@
           <h3 id="clanTag">—</h3>
           <p id="clanStats">—</p>
         </div>
+        <div class="clan-search"><input id="memberSearch" type="text" placeholder="Buscar por nombre, trofeos o cargo (líder, colíder...)"></div>
       </div>
       <ul class="clan-list" id="clanList">
         <li>Carregando informações…</li>
       </ul>
+      <div class="danger-section">
+        <div class="danger-header">
+          <h3>Zona de perigo de expulsão</h3>
+          <p id="dangerMeta">—</p>
+        </div>
+        <ul class="danger-list" id="dangerList">
+          <li>Carregando avaliação…</li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -282,7 +305,7 @@
 
     fetch('/api/clan-info')
   .then(r => r.json())
-  .then(({ clan, memberList }) => {
+  .then(({ clan, memberList, dangerList }) => {
     if (clan) {
       if (navLogo) navLogo.src = clan.badgeUrl;
       const heroLogo = document.getElementById('heroLogo');
@@ -329,6 +352,7 @@
     // Render com ordenação
     let membersData = Array.isArray(memberList) ? memberList.slice() : [];
     let sortMode = 'medals';
+    let searchQuery = '';
 
     function renderMembers(){
       if (!membersData.length){
@@ -336,6 +360,35 @@
         return;
       }
       let data = membersData.slice();
+      // filtro por search:
+      // - nome: substring case-insensitive
+      // - troféus: se input for número, filtra por startsWith no valor de troféus
+      // - cargo: permite filtrar por roles (líder, colíder, ancião, membro)
+      if (searchQuery) {
+        const q = searchQuery.trim().toLowerCase();
+        const asNumber = Number(q);
+        const isNum = !isNaN(asNumber) && q !== '';
+        data = data.filter(m => {
+          const name = (m.name||'').toLowerCase();
+          const trophiesStr = String(m.trophies||'');
+          const matchName = name.includes(q);
+          const matchTroph = isNum ? trophiesStr.startsWith(String(asNumber)) : false;
+          // roles possíveis em pt (do backend): leader, coleader, elder, member
+          const roleKey = (m.role||'').toLowerCase();
+          // normaliza acentos de termos digitados comuns em espanhol/pt
+          const norm = (s)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'');
+          const qNorm = norm(q);
+          const roleMap = {
+            'leader':'lider',
+            'coleader':'colider',
+            'elder':'anciao',
+            'member':'membro'
+          };
+          const roleNames = [roleKey, roleMap[roleKey]||roleKey];
+          const matchRole = roleNames.some(r => norm(r).includes(qNorm));
+          return matchName || matchTroph || matchRole;
+        });
+      }
       if (sortMode === 'medals'){
         data.sort((a,b)=>{
           const at=a.fameTotal||0, bt=b.fameTotal||0;
@@ -408,6 +461,37 @@
     }
 
     renderMembers();
+    const memberSearch = document.getElementById('memberSearch');
+    if (memberSearch){
+      memberSearch.addEventListener('input', ()=>{ searchQuery = memberSearch.value||''; renderMembers(); setTimeout(attachTooltips, 0); });
+    }
+
+    // Danger list (independente dos filtros)
+    function renderDanger(){
+      const cont = document.getElementById('dangerList');
+      const meta = document.getElementById('dangerMeta');
+      const data = Array.isArray(dangerList)? dangerList : [];
+      if (!data.length){
+        cont.innerHTML = '<li>Ninguém em zona de perigo.</li>';
+        meta.textContent = '';
+        return;
+      }
+      // período de referência
+      const pk = data[0]?.periodKeys || [];
+      const thr = data[0]?.threshold;
+      const avg = data[0]?.referenceAvg;
+      meta.textContent = pk.length
+        ? `Regra: >4 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: >4 dias e baixo desempenho recente';
+      cont.innerHTML = data.map((d,i)=>{
+        const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
+        return `<li>
+          <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
+          <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
+        </li>`;
+      }).join('');
+    }
+    renderDanger();
 
     // Tooltip flutuante para evitar clipping
     const tip = document.createElement('div');
@@ -498,6 +582,7 @@
               <div id="pmChartWrap" style="width:100%;height:300px;position:relative">
                 <canvas id="pmChart" style="width:100%;height:100%"></canvas>
               </div>
+              <div id="pmWrSummary" style="margin-top:.5rem;font-weight:600;color:var(--fg)"></div>
 
             </div>
           </div>
@@ -551,6 +636,13 @@
             scales:{x:{type:'linear',title:{display:true,text:'Partida'}},y:{beginAtZero:true,min:0,max:100,title:{display:true,text:'%'}}},
             plugins:{legend:{position:'bottom'}}
           }});
+          // resumo do WR do jogador (geral do filtro atual)
+          const total=seq; const pct=total>0? Math.round((cw/total)*100) : 0;
+          const sumEl=document.getElementById('pmWrSummary');
+          if(sumEl){
+            const modeLabel = filterMode || 'Todos os modos';
+            sumEl.innerHTML = `<strong>Win‑rate do jogador:</strong> ${pct}% · <span style="opacity:.8">${total} partidas · ${modeLabel}</span>`;
+          }
           // força tamanho do canvas ao wrapper para evitar expansão
           const wrap=document.getElementById('pmChartWrap');
           if(wrap){ ctx.width=wrap.clientWidth; ctx.height=wrap.clientHeight; }

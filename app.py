@@ -3,76 +3,27 @@ import requests
 import json
 import os
 import re
-import subprocess
-import socket
 import time
 from datetime import datetime, timezone
 import threading
+import shutil
 
 app = Flask(__name__)
 
 # Config base
 CLAN_TAG = "#G9QY8GPR"
 
-# Configuração de proxy para desenvolvimento local (controle no código)
-# Ajuste para True para habilitar o uso de proxy e criação automática do túnel SSH
-USE_PROXY = False
-PROXIES = {
-    'http': 'socks5h://127.0.0.1:8080',
-    'https': 'socks5h://127.0.0.1:8080'
-} if USE_PROXY else None
+ 
 
 TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjRiNDYzOTRmLWJhN2UtNDhiYS1hNTY0LWQ0NDdjZjRlYTk0MSIsImlhdCI6MTc2MDIwMTYxNywic3ViIjoiZGV2ZWxvcGVyLzI5ZDU1N2YzLTc1MTUtNDNhYy04YjI4LWYwMzRhMThiN2MxYyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyIxMDMuMTk5LjE4NS41NCJdLCJ0eXBlIjoiY2xpZW50In1dfQ.hrj4c012WJ3YunuBL2AzroxSG_SxQv8QG0VDpN6IH1YyuNymNW6m92GEjyfKH-yZBuH8Pdzz8HmuWVnGoKJcYA"
 BADGE_MAPPING_URL = "https://royaleapi.github.io/cr-api-data/json/alliance_badges.json"
 
 # Carrega mapeamento de badgeId → name (uma vez, na inicialização)
-# Não usa proxy aqui para evitar depender do túnel na importação do módulo
 try:
     badge_mapping = requests.get(BADGE_MAPPING_URL).json()
 except Exception as e:
     app.logger.error(f"Erro ao carregar badge mapping: {e}")
     badge_mapping = []
-
-def _is_socks_proxy_listening(host: str = "127.0.0.1", port: int = 8080, timeout_seconds: float = 0.5) -> bool:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(timeout_seconds)
-    try:
-        sock.connect((host, port))
-        return True
-    except Exception:
-        return False
-    finally:
-        try:
-            sock.close()
-        except Exception:
-            pass
-
-def _start_ssh_tunnel_socks5():
-    # Se já houver um túnel ativo na porta 8080, apenas reutiliza
-    if _is_socks_proxy_listening():
-        print("Túnel SSH já está ativo em 127.0.0.1:8080. Reutilizando.")
-        return
-    # Abre uma nova janela do PowerShell que solicitará a senha e manterá o túnel ativo
-    print("Estabelecendo túnel SSH para 103.199.185.54. Insira a senha do usuário root na janela aberta...")
-    ps_command = "Write-Host 'Abrindo túnel: ssh -D 8080 -N root@103.199.185.54'; ssh -D 8080 -N root@103.199.185.54"
-    # Abre uma nova janela de console do PowerShell e mantém aberta (-NoExit)
-    subprocess.Popen([
-        "powershell.exe",
-        "-NoExit",
-        "-Command",
-        ps_command
-    ], creationflags=subprocess.CREATE_NEW_CONSOLE)
-    # Aguarda o túnel ficar disponível (até 120s)
-    max_wait_seconds = 120
-    waited = 0
-    while waited < max_wait_seconds and not _is_socks_proxy_listening():
-        time.sleep(1)
-        waited += 1
-    if _is_socks_proxy_listening():
-        print("Túnel SSH ativo em 127.0.0.1:8080.")
-    else:
-        print("Aviso: não foi possível detectar o túnel em 127.0.0.1:8080. Verifique a senha/janela do SSH.")
-
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -225,6 +176,175 @@ def _update_members_first_seen(members: list) -> None:
             pass
     _save_fame_history(history)
 
+
+def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[str]:
+    """Descobre as últimas chaves de corrida (raceKey) ativas ordenando por timestamp dos eventos de timeline.
+    Útil para identificar a corrida atual/mais recente e a anterior, mesmo se as chaves não forem ordenáveis lexicograficamente.
+    """
+    try:
+        race_to_ts = {}
+        players = (history or {}).get("players", {})
+        for _tag, pdata in players.items():
+            for ev in pdata.get("timeline", []) or []:
+                rk = ev.get("raceKey")
+                ts = ev.get("ts")
+                if not rk or not ts:
+                    continue
+                try:
+                    tsv = datetime.fromisoformat(ts.replace('Z','+00:00')).timestamp()
+                except Exception:
+                    continue
+                prev = race_to_ts.get(rk)
+                if prev is None or tsv > prev:
+                    race_to_ts[rk] = tsv
+        if not race_to_ts:
+            # fallback: usa lastRaceKey se existir
+            last_rk = ((history or {}).get("meta") or {}).get("lastRaceKey")
+            return [last_rk] if last_rk else []
+        # ordena por ts desc e pega os últimos N
+        ordered = sorted(race_to_ts.items(), key=lambda kv: -kv[1])
+        return [rk for rk, _ts in ordered[:max_periods]]
+    except Exception:
+        return []
+
+
+def _compute_danger_list(members: list) -> list[dict]:
+    """Calcula zona de perigo de expulsão.
+    Critério: membros com >4 dias no clã e cuja soma de medalhas nas últimas 2 corridas
+    (mais recentes ativas) esteja < 30% da média do clã para esse mesmo intervalo.
+    Retorna lista ordenada pela soma ascendente.
+    """
+    try:
+        history = _load_fame_history()
+        players_hist = (history or {}).get("players", {})
+        period_keys = _last_period_keys_from_history(history, 2)
+        if not period_keys:
+            return []
+        now = datetime.now(timezone.utc)
+        # calcula soma por membro e média de referência
+        eligible = []
+        sums = []
+        for m in members or []:
+            tag = m.get("tag")
+            if not tag:
+                continue
+            first_seen = None
+            try:
+                ph = players_hist.get(tag, {})
+                fs = ph.get("firstSeen") or m.get("firstSeen")
+                if fs:
+                    first_seen = datetime.fromisoformat(fs.replace('Z','+00:00'))
+            except Exception:
+                first_seen = None
+            days = None
+            if first_seen:
+                try:
+                    days = (now - first_seen).total_seconds() / 86400.0
+                except Exception:
+                    days = None
+            # precisa ter > 4 dias no clã
+            if days is None or days <= 4:
+                continue
+            byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
+            two_sum = 0
+            for rk in period_keys:
+                two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
+            entry = {
+                "name": m.get("name"),
+                "tag": tag,
+                "role": m.get("role"),
+                "trophies": m.get("trophies"),
+                "daysInClan": round(days, 1),
+                "twoPeriodSum": int(two_sum),
+                "periodKeys": period_keys,
+                "firstSeen": (players_hist.get(tag, {}) or {}).get("firstSeen") or m.get("firstSeen")
+            }
+            eligible.append(entry)
+            sums.append(two_sum)
+        if not eligible:
+            return []
+        avg = (sum(sums) / max(1, len(sums))) if sums else 0.0
+        threshold = avg * 0.30
+        danger = [e for e in eligible if e.get("twoPeriodSum", 0) < threshold]
+        # ordena pela soma ascendente (menores primeiro)
+        danger.sort(key=lambda x: (x.get("twoPeriodSum", 0), x.get("trophies") or 0))
+        # inclui metadado de referência para uso no front se quiser exibir
+        for e in danger:
+            e["referenceAvg"] = int(round(avg))
+            e["threshold"] = int(round(threshold))
+        return danger
+    except Exception:
+        return []
+
+
+def _write_player_historico(player_tag: str, battles: list) -> None:
+    """Cria/atualiza arquivo historico_{tag}.json com partidas novas (sem duplicar)."""
+    try:
+        if not player_tag:
+            return
+        safe = re.sub(r"\W+", "", player_tag)
+        arquivo = f"historico_{safe}.json"
+        historico = []
+        if os.path.exists(arquivo):
+            try:
+                with open(arquivo, "r", encoding="utf-8") as f:
+                    historico = json.load(f)
+            except Exception:
+                historico = []
+        # conjunto de chaves vistas para evitar duplicidade
+        try:
+            seen = {h.get("battleTime", "") + ((h.get("team") or [{}])[0].get("tag") or "") for h in historico}
+        except Exception:
+            seen = set()
+        novas = []
+        for b in (battles or []):
+            try:
+                key = (b.get("battleTime") or "") + (((b.get("team") or [{}])[0]).get("tag") or "")
+            except Exception:
+                key = None
+            if key and key not in seen:
+                novas.append(b)
+        if novas:
+            historico += novas
+            try:
+                with open(arquivo, "w", encoding="utf-8") as f:
+                    json.dump(historico, f, ensure_ascii=False, indent=4)
+            except Exception:
+                pass
+    except Exception:
+        # não deixa o updater cair por falhas de IO/JSON
+        pass
+
+
+def _archive_non_member_historicos(current_member_safe_tags: set[str], archive_dir: str = "historico_archived") -> None:
+    """Move historico_*.json de ex-membros para a pasta de arquivo, mantendo apenas atuais na raiz."""
+    try:
+        if not isinstance(current_member_safe_tags, set):
+            current_member_safe_tags = set(current_member_safe_tags or [])
+        if not os.path.isdir(archive_dir):
+            try:
+                os.makedirs(archive_dir, exist_ok=True)
+            except Exception:
+                return
+        for fname in os.listdir():
+            if not (fname.startswith("historico_") and fname.endswith(".json")):
+                continue
+            try:
+                tag_safe = re.sub(r"^historico_|\.json$", "", fname)
+            except Exception:
+                continue
+            if tag_safe and tag_safe not in current_member_safe_tags:
+                src = fname
+                dst = os.path.join(archive_dir, fname)
+                try:
+                    if os.path.exists(dst):
+                        os.remove(dst)
+                    shutil.move(src, dst)
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
 def get_headers():
     return {
         "Authorization": f"Bearer {TOKEN}",
@@ -233,13 +353,13 @@ def get_headers():
 
 def get_cartas_api():
     url = "https://api.clashroyale.com/v1/cards"
-    resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+    resp = requests.get(url, headers=get_headers())
     return resp.json() if resp.status_code == 200 else {"items": []}
 
 def fetch_batalhas(tag, tipos):
     tag_enc = tag.replace("#", "%23")
     url = f"https://api.clashroyale.com/v1/players/{tag_enc}/battlelog"
-    resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+    resp = requests.get(url, headers=get_headers())
     if resp.status_code == 200:
         data = resp.json()
         return [b for b in data if b.get("type") in tipos] if tipos else data
@@ -260,7 +380,7 @@ def clan_info():
     info_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}"
 
     try:
-        info_resp = requests.get(info_url, headers=get_headers(), proxies=PROXIES)
+        info_resp = requests.get(info_url, headers=get_headers())
         info_resp.raise_for_status()
     except Exception as e:
         app.logger.exception("Erro ao buscar informações do clã")
@@ -281,7 +401,7 @@ def clan_info():
     # Busca membros do clã
     members_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}/members"
     try:
-        members_resp = requests.get(members_url, headers=get_headers(), proxies=PROXIES)
+        members_resp = requests.get(members_url, headers=get_headers())
         members_resp.raise_for_status()
         members_json = members_resp.json()
         members = members_json.get("memberList") or members_json.get("items") or []
@@ -293,7 +413,7 @@ def clan_info():
     fame_by_tag = {}
     try:
         rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc}/currentriverrace"
-        rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+        rr_resp = requests.get(rr_url, headers=get_headers())
         if rr_resp.status_code == 200:
             rr = rr_resp.json()
             # Estrutura esperada: { "clan": { "participants": [ { tag, fame, ... } ] } }
@@ -354,6 +474,12 @@ def clan_info():
             m["firstSeen"] = None
             m["rankDeltaSticky"] = 0
 
+    # Calcula lista de perigo de expulsão (sempre independente do filtro visual do front)
+    try:
+        danger_list = _compute_danger_list(members)
+    except Exception:
+        danger_list = []
+
     return jsonify({
         "clan": {
             "name": info.get("name"),
@@ -390,7 +516,8 @@ def clan_info():
                 "firstSeen": m.get("firstSeen")
             }
             for m in members
-        ]
+        ],
+        "dangerList": danger_list
     })
 
 @app.route("/api/tags")
@@ -441,7 +568,7 @@ def api_player():
     tag_enc = tag.replace("#", "%23")
     url = f"https://api.clashroyale.com/v1/players/{tag_enc}"
     try:
-        resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+        resp = requests.get(url, headers=get_headers())
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
@@ -521,7 +648,7 @@ def api_player_matches():
     tag_enc = tag.replace("#", "%23")
     url = f"https://api.clashroyale.com/v1/players/{tag_enc}/battlelog"
     try:
-        resp = requests.get(url, headers=get_headers(), proxies=PROXIES)
+        resp = requests.get(url, headers=get_headers())
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
@@ -579,8 +706,6 @@ def estatisticas_cartas():
     return jsonify(resultado)
 
 if __name__ == "__main__":
-    if USE_PROXY:
-        _start_ssh_tunnel_socks5()
 
     # Inicia atualizador em background (evita rodar duas vezes no reloader)
     def _bg_updater():
@@ -588,7 +713,7 @@ if __name__ == "__main__":
             try:
                 tag_enc_local = CLAN_TAG.replace("#", "%23")
                 rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/currentriverrace"
-                rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+                rr_resp = requests.get(rr_url, headers=get_headers())
                 if rr_resp.status_code == 200:
                     rr = rr_resp.json()
                     participants = ((rr.get("clan") or {}).get("participants") or rr.get("participants") or [])
@@ -596,11 +721,21 @@ if __name__ == "__main__":
                     _update_fame_history(rr, participants)
                     # Atualiza firstSeen/lastSeen capturando membros atuais
                     members_url_local = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/members"
-                    m_resp = requests.get(members_url_local, headers=get_headers(), proxies=PROXIES)
+                    m_resp = requests.get(members_url_local, headers=get_headers())
                     if m_resp.status_code == 200:
                         m_json = m_resp.json()
                         members_local = m_json.get("memberList") or m_json.get("items") or []
                         _update_members_first_seen(members_local)
+                        # Atualiza historicos dos membros atuais e arquiva ex-membros
+                        try:
+                            safe_tags = set()
+                            for m in members_local:
+                                mt = (m or {}).get("tag") or ""
+                                if mt:
+                                    safe_tags.add(re.sub(r"\W+", "", mt))
+                            _archive_non_member_historicos(safe_tags)
+                        except Exception:
+                            pass
                     # Atualiza winrate por deck para membros com partidas recentes
                     try:
                         hist = _load_fame_history()
@@ -611,11 +746,16 @@ if __name__ == "__main__":
                                 continue
                             # pega partidas
                             try:
-                                pl = requests.get(f"https://api.clashroyale.com/v1/players/{mt.replace('#','%23')}/battlelog", headers=get_headers(), proxies=PROXIES)
+                                pl = requests.get(f"https://api.clashroyale.com/v1/players/{mt.replace('#','%23')}/battlelog", headers=get_headers())
                                 if pl.status_code==200:
                                     bl = pl.json()
                                     # usa últimas 50 para janela
                                     bl = bl[:50]
+                                    # escreve/atualiza historico do jogador
+                                    try:
+                                        _write_player_historico(mt, bl)
+                                    except Exception:
+                                        pass
                                     # tenta identificar deck do time
                                     p = players.setdefault(mt, {"name": m.get("name"), "total": 0, "by_period": {}, "timeline": []})
                                     dh = p.setdefault("deckHistory", {})
@@ -673,17 +813,43 @@ if __name__ == "__main__":
     try:
         tag_enc_local = CLAN_TAG.replace("#", "%23")
         rr_url = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/currentriverrace"
-        rr_resp = requests.get(rr_url, headers=get_headers(), proxies=PROXIES)
+        rr_resp = requests.get(rr_url, headers=get_headers())
         if rr_resp.status_code == 200:
             rr = rr_resp.json()
             participants = ((rr.get("clan") or {}).get("participants") or rr.get("participants") or [])
             _update_fame_history(rr, participants)
             members_url_local = f"https://api.clashroyale.com/v1/clans/{tag_enc_local}/members"
-            m_resp = requests.get(members_url_local, headers=get_headers(), proxies=PROXIES)
+            m_resp = requests.get(members_url_local, headers=get_headers())
             if m_resp.status_code == 200:
                 m_json = m_resp.json()
                 members_local = m_json.get("memberList") or m_json.get("items") or []
                 _update_members_first_seen(members_local)
+                    # Atualiza historicos dos membros atuais e arquiva ex-membros
+                    try:
+                        safe_tags = set()
+                        for m in members_local:
+                            mt = (m or {}).get("tag") or ""
+                            if mt:
+                                safe_tags.add(re.sub(r"\W+", "", mt))
+                        _archive_non_member_historicos(safe_tags)
+                    except Exception:
+                        pass
+                    # Busca partidas e escreve historicos na inicialização
+                    try:
+                        for m in (members_local or []):
+                            mt = m.get("tag")
+                            if not mt:
+                                continue
+                            try:
+                                pl = requests.get(f"https://api.clashroyale.com/v1/players/{mt.replace('#','%23')}/battlelog", headers=get_headers())
+                                if pl.status_code==200:
+                                    bl = pl.json()
+                                    bl = bl[:50]
+                                    _write_player_historico(mt, bl)
+                            except Exception:
+                                continue
+                    except Exception:
+                        pass
     except Exception:
         pass
 
