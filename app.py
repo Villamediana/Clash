@@ -71,15 +71,27 @@ def _cards_key(cards: list) -> str:
 
 
 def _derive_race_key(rr_json: dict) -> str:
-    # tenta campos oficiais; cai para semana do ano se faltar
+    """Gera uma chave ESTÁVEL para a GUERRA (não por dia).
+
+    A API de River Race expõe campos como:
+      - periodType: tipo do período (ex.: "warDay")
+      - sectionIndex: índice da seção/corrida dentro da temporada
+      - periodIndex: índice do DIA dentro da corrida (muda diariamente)
+      - seasonId: id da temporada
+
+    Para acumular medalhas corretamente ao longo de toda a guerra, a chave
+    não deve incluir o periodIndex (dia). Assim, o delta é calculado como
+    curr - prev ao longo de vários dias até a guerra encerrar.
+    """
     period_type = rr_json.get("periodType") or rr_json.get("sectionType") or "unknown"
     section_index = rr_json.get("sectionIndex")
-    period_index = rr_json.get("periodIndex")
     season_id = rr_json.get("seasonId") or rr_json.get("season")
-    base = f"{period_type}-{section_index}-{period_index}-{season_id}"
+
+    # chave estável por GUERRA (sem periodIndex)
+    base = f"{period_type}-{section_index}-{season_id}"
     if base.replace("None", "").strip("-"):
         return base
-    # fallback simples: ano-semana
+    # fallback: aproxima semana do ano para evitar quebrar acumulação
     return f"wk-{time.gmtime().tm_year}-{time.gmtime().tm_yday // 7}"
 
 
