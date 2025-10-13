@@ -220,7 +220,7 @@ def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[
 
 def _compute_danger_list(members: list) -> list[dict]:
     """Calcula zona de perigo de expulsão.
-    Critério: membros com >4 dias no clã e cuja soma de medalhas nas últimas 2 corridas
+    Critério: membros com >1 dia no clã e cuja soma de medalhas nas últimas 2 corridas
     (mais recentes ativas) esteja < 30% da média do clã para esse mesmo intervalo.
     Retorna lista ordenada pela soma ascendente.
     """
@@ -252,8 +252,8 @@ def _compute_danger_list(members: list) -> list[dict]:
                     days = (now - first_seen).total_seconds() / 86400.0
                 except Exception:
                     days = None
-            # precisa ter > 4 dias no clã
-            if days is None or days <= 4:
+            # precisa ter > 1 dia no clã
+            if days is None or days <= 1:
                 continue
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
             two_sum = 0
