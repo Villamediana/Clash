@@ -542,10 +542,49 @@
         ? `Regra: >4 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
         : 'Regra: >4 dias e baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
-          const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
+          const member = (membersData||[]).find(x=>x.tag===d.tag) || {};
+          const roleKey = (member.role||d.role||'member').toLowerCase();
+          const trophies = member.trophies ?? d.trophies ?? 0;
+          const fame = member.fame ?? 0;
+          const famePrev = member.famePrev ?? 0;
+          const fameTotal = member.fameTotal ?? 0;
+          const donations = member.donations ?? 0;
+          const fs = d.firstSeen || member.firstSeen || null;
+          let sinceRel = '—';
+          if (fs){
+            try{
+              const firstSeen = new Date(fs);
+              if(!isNaN(firstSeen)){
+                const diffMs = Date.now() - firstSeen.getTime();
+                const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (dias < 60){ sinceRel = `${dias} ${dias===1 ? 'dia' : 'dias'}`; }
+                else {
+                  const meses = Math.floor(dias / 30);
+                  if (meses < 24) sinceRel = `${meses} ${meses===1 ? 'mês' : 'meses'}`;
+                  else { const anos = Math.floor(meses / 12); sinceRel = `${anos} ${anos===1 ? 'ano' : 'anos'}`; }
+                }
+              }
+            }catch(e){}
+          }
+          const ttRole = 'Cargo no clã';
+          const ttTroph = 'Troféus do jogador';
+          const ttFame = 'Medalhas de guerra (atual)';
+          const ttPrev = 'Medalhas da guerra anterior';
+          const ttCum = 'Medalhas de guerra (acumuladas)';
+          const ttDon = 'Doações de cartas (semanais)';
+          const ttMemberSince = sinceRel==='—' ? 'Membro —' : `Membro há ${sinceRel}`;
         return `<li data-tag="${d.tag}">
-          <span>🚨 ${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
-          <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
+          <span>🚨 ${i+1}. ${d.name}</span>
+          <span>
+            <span class='${cssRole[roleKey]} tt' data-tt='${ttRole}'>${rolePT[roleKey] || roleKey}</span>
+            · <span class='tt' data-tt='${ttTroph}'>🏆 ${trophies}</span>
+            · <span class='tt' data-tt='${ttFame}'>🏅 ${fame}</span>
+            · <span class='tt' data-tt='${ttPrev}'>⏮️ ${famePrev}</span>
+            · <span class='tt' data-tt='${ttCum}'>🥇 ${fameTotal}</span>
+            · <span class='tt' data-tt='${ttDon}'>🎁 ${donations}</span>
+            · <span class='tt' data-tt='${ttMemberSince}'>📅</span>
+            · <span class="meta">Σ2: ${d.twoPeriodSum}</span>
+          </span>
         </li>`;
       }).join('');
       // clique abre modal do jogador
@@ -571,10 +610,49 @@
         ? `Regra: >4 dias e soma (últimas 2 corridas) ≥ 150% da média · Média ${avg||0} · Corte ${thr||0}`
         : 'Regra: >4 dias e alto desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
-        const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
+        const member = (membersData||[]).find(x=>x.tag===d.tag) || {};
+        const roleKey = (member.role||d.role||'member').toLowerCase();
+        const trophies = member.trophies ?? d.trophies ?? 0;
+        const fame = member.fame ?? 0;
+        const famePrev = member.famePrev ?? 0;
+        const fameTotal = member.fameTotal ?? 0;
+        const donations = member.donations ?? 0;
+        const fs = d.firstSeen || member.firstSeen || null;
+        let sinceRel = '—';
+        if (fs){
+          try{
+            const firstSeen = new Date(fs);
+            if(!isNaN(firstSeen)){
+              const diffMs = Date.now() - firstSeen.getTime();
+              const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+              if (dias < 60){ sinceRel = `${dias} ${dias===1 ? 'dia' : 'dias'}`; }
+              else {
+                const meses = Math.floor(dias / 30);
+                if (meses < 24) sinceRel = `${meses} ${meses===1 ? 'mês' : 'meses'}`;
+                else { const anos = Math.floor(meses / 12); sinceRel = `${anos} ${anos===1 ? 'ano' : 'anos'}`; }
+              }
+            }
+          }catch(e){}
+        }
+        const ttRole = 'Cargo no clã';
+        const ttTroph = 'Troféus do jogador';
+        const ttFame = 'Medalhas de guerra (atual)';
+        const ttPrev = 'Medalhas da guerra anterior';
+        const ttCum = 'Medalhas de guerra (acumuladas)';
+        const ttDon = 'Doações de cartas (semanais)';
+        const ttMemberSince = sinceRel==='—' ? 'Membro —' : `Membro há ${sinceRel}`;
         return `<li data-tag="${d.tag}">
-          <span>⭐ ${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
-          <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
+          <span>⭐ ${i+1}. ${d.name}</span>
+          <span>
+            <span class='${cssRole[roleKey]} tt' data-tt='${ttRole}'>${rolePT[roleKey] || roleKey}</span>
+            · <span class='tt' data-tt='${ttTroph}'>🏆 ${trophies}</span>
+            · <span class='tt' data-tt='${ttFame}'>🏅 ${fame}</span>
+            · <span class='tt' data-tt='${ttPrev}'>⏮️ ${famePrev}</span>
+            · <span class='tt' data-tt='${ttCum}'>🥇 ${fameTotal}</span>
+            · <span class='tt' data-tt='${ttDon}'>🎁 ${donations}</span>
+            · <span class='tt' data-tt='${ttMemberSince}'>📅</span>
+            · <span class="meta">Σ2: ${d.twoPeriodSum}</span>
+          </span>
         </li>`;
       }).join('');
       // clique abre modal do jogador
