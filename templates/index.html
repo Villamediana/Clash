@@ -470,7 +470,9 @@
         const ttRole = 'Cargo no clã';
         const ttTroph = 'Troféus do jogador';
         const ttFame = 'Medalhas de guerra (atual)';
+        const ttPrev = 'Medalhas da guerra anterior';
         const ttCum = 'Medalhas de guerra (acumuladas)';
+        const ttDon = 'Doações de cartas (semanais)';
         const ttMemberSince = sinceRel==='—' ? 'Membro —' : `Membro há ${sinceRel}`;
         const expulse = (()=>{
           // critério: >4 dias de membro e fame atual abaixo da mediana do clã em 30%
@@ -488,7 +490,9 @@
               <span class='${cssRole[key]} tt' data-tt='${ttRole}'>${rolePT[key] || m.role}</span>
               · <span class='tt' data-tt='${ttTroph}'>🏆 ${m.trophies} troféus</span>
               · <span class='tt' data-tt='${ttFame}'>🏅 ${m.fame || 0}</span>
+              · <span class='tt' data-tt='${ttPrev}'>⏮️ ${m.famePrev || 0}</span>
               · <span class='tt' data-tt='${ttCum}'>🥇 ${m.fameTotal || 0}</span>
+              · <span class='tt' data-tt='${ttDon}'>🎁 ${m.donations || 0}</span>
               · <span class='tt' data-tt='${ttMemberSince}'>📅</span>
             </span>
             </li>`;
@@ -661,7 +665,7 @@
           <div class="tab-panel" id="tab-fame">
             <div class="card" style="background:var(--card);border-radius:12px;padding:1rem;border:1px solid var(--glass)">
               <h4 style="margin-bottom:.5rem">Medalhas por corrida</h4>
-              <div>${periods.map(p=>`<div style='display:flex;justify-content:space-between'><span>${p.meta?.periodType||''} ${p.meta?.periodIndex??''}</span><span>🏅 ${p.total}</span></div>`).join('')||'—'}</div>
+              <div>${periods.filter(p => (p.meta?.periodType||'').toLowerCase()!=='training').map(p=>`<div style='display:flex;justify-content:space-between'><span>${p.meta?.periodType||''} ${p.meta?.periodIndex??''}</span><span>🏅 ${p.total}</span></div>`).join('')||'—'}</div>
             </div>
           </div>
           `;

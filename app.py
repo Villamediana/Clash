@@ -450,6 +450,16 @@ def clan_info():
         rr = {}
         totals, rank_delta, race_key = {}, {}, None
 
+    # Carrega histórico para computar valores da guerra anterior
+    try:
+        history_all = _load_fame_history()
+        last_two = _last_period_keys_from_history(history_all, 2)
+        prev_key = last_two[1] if len(last_two) > 1 else None
+        hist_players_all = (history_all or {}).get("players", {})
+    except Exception:
+        prev_key = None
+        hist_players_all = {}
+
     for m in members:
         try:
             m["fame"] = fame_by_tag.get(m.get("tag"), 0)
@@ -458,6 +468,21 @@ def clan_info():
         # totais cumulativos (podem não existir se histórico não conseguiu atualizar)
         m["fameTotal"] = (totals.get(m.get("tag")) if 'totals' in locals() else None) or 0
         m["rankDelta"] = (rank_delta.get(m.get("tag")) if 'rank_delta' in locals() else None) or 0
+        # doações semanais vindas do endpoint de membros
+        try:
+            m["donations"] = int(m.get("donations") or 0)
+        except Exception:
+            m["donations"] = 0
+        # medalhas da guerra anterior
+        try:
+            if prev_key:
+                ph = hist_players_all.get(m.get("tag"), {}) or {}
+                byp = ph.get("by_period", {}) or {}
+                m["famePrev"] = int(((byp.get(prev_key) or {}).get("total", 0)) or 0)
+            else:
+                m["famePrev"] = 0
+        except Exception:
+            m["famePrev"] = 0
         # firstSeen
         try:
             hist_players = _load_fame_history().get("players", {})
@@ -518,10 +543,12 @@ def clan_info():
                 "role": m.get("role"),
                 "trophies": m.get("trophies"),
                 "fame": m.get("fame", 0),
+                "famePrev": m.get("famePrev", 0),
                 "fameTotal": m.get("fameTotal", 0),
                 "rankDelta": m.get("rankDelta", 0),
                 "rankDeltaSticky": m.get("rankDeltaSticky", 0),
-                "firstSeen": m.get("firstSeen")
+                "firstSeen": m.get("firstSeen"),
+                "donations": m.get("donations", 0)
             }
             for m in members
         ],
