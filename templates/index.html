@@ -544,7 +544,7 @@
       cont.innerHTML = data.map((d,i)=>{
           const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
         return `<li data-tag="${d.tag}">
-          <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
+          <span>🚨 ${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
           <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
         </li>`;
       }).join('');
@@ -573,7 +573,7 @@
       cont.innerHTML = data.map((d,i)=>{
         const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
         return `<li data-tag="${d.tag}">
-          <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
+          <span>⭐ ${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
           <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
         </li>`;
       }).join('');
