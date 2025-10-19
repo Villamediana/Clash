@@ -296,6 +296,7 @@ def _compute_promotion_list(members: list) -> list[dict]:
     try:
         history = _load_fame_history()
         players_hist = (history or {}).get("players", {})
+        period_meta = (history or {}).get("periodMeta", {})
         period_keys = _last_period_keys_from_history(history, 2)
         if not period_keys:
             return []
@@ -307,6 +308,13 @@ def _compute_promotion_list(members: list) -> list[dict]:
             tag = m.get("tag")
             if not tag:
                 continue
+            # exclui líderes e colíderes da promoção
+            try:
+                role_key = str(m.get("role") or "").lower()
+                if role_key in {"leader", "coleader"}:
+                    continue
+            except Exception:
+                pass
             # dias no clã
             first_seen = None
             try:
@@ -325,8 +333,25 @@ def _compute_promotion_list(members: list) -> list[dict]:
             if days is None or days <= 4:
                 continue
 
-            # soma 2 corridas
+            # participação em guerras (exclui training) e soma 2 corridas
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
+            # exige no mínimo 3 guerras com contribuição (>0), ignorando periods de treinamento
+            wars_count = 0
+            try:
+                for rk, v in (byp or {}).items():
+                    meta = (period_meta.get(rk) or {})
+                    ptype = str(meta.get("periodType") or "").lower()
+                    if ptype == "training":
+                        continue
+                    tot_v = int((v or {}).get("total", 0) or 0)
+                    if tot_v > 0:
+                        wars_count += 1
+            except Exception:
+                wars_count = 0
+            if wars_count < 3:
+                continue
+
+            # soma nas últimas 2 corridas mais recentes
             two_sum = 0
             for rk in period_keys:
                 two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)

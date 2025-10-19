@@ -170,6 +170,11 @@
     .danger-list li{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-radius:var(--radius);background:var(--card);border:1px solid rgba(239,68,68,.35)}
     .danger-list .meta{font-size:.9rem;color:var(--muted)}
 
+    /* Promotion list with green border */
+    .promo-list{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+    .promo-list li{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-radius:var(--radius);background:var(--card);border:1px solid rgba(34,197,94,.45)}
+    .promo-list .meta{font-size:.9rem;color:var(--muted)}
+
     .member{font-weight:400;}
     .elder{font-weight:700;}
     .coleader{font-weight:700;
@@ -324,7 +329,7 @@
           <h3>Zona de promoção</h3>
           <p id="promoMeta">—</p>
         </div>
-        <ul class="danger-list" id="promoList">
+        <ul class="promo-list" id="promoList">
           <li>Carregando avaliação…</li>
         </ul>
       </div>
@@ -538,11 +543,15 @@
         : 'Regra: >4 dias e baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
           const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
-        return `<li>
+        return `<li data-tag="${d.tag}">
           <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
           <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
         </li>`;
       }).join('');
+      // clique abre modal do jogador
+      document.querySelectorAll('#dangerList li').forEach(li=>{
+        li.onclick = ()=> openPlayerModal(li.getAttribute('data-tag'));
+      });
     }
     renderDanger();
 
@@ -563,11 +572,15 @@
         : 'Regra: >4 dias e alto desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
         const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
-        return `<li>
+        return `<li data-tag="${d.tag}">
           <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
           <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
         </li>`;
       }).join('');
+      // clique abre modal do jogador
+      document.querySelectorAll('#promoList li').forEach(li=>{
+        li.onclick = ()=> openPlayerModal(li.getAttribute('data-tag'));
+      });
     }
     renderPromo();
 
