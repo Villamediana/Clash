@@ -265,7 +265,7 @@
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Zona de perigo de expulsão</h4>
-              <p style="color:var(--muted)">Jogadores com mais de 1 dia no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
+              <p style="color:var(--muted)">Jogadores com mais de 4 dias no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Win‑rate do deck e do jogador</h4>
@@ -319,6 +319,15 @@
           <li>Carregando avaliação…</li>
         </ul>
       </div>
+      <div class="danger-section">
+        <div class="danger-header">
+          <h3>Zona de promoção</h3>
+          <p id="promoMeta">—</p>
+        </div>
+        <ul class="danger-list" id="promoList">
+          <li>Carregando avaliação…</li>
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -345,7 +354,7 @@
 
     fetch('/api/clan-info')
   .then(r => r.json())
-  .then(({ clan, memberList, dangerList }) => {
+  .then(({ clan, memberList, dangerList, promotionList }) => {
     if (clan) {
       if (navLogo) navLogo.src = clan.badgeUrl;
       const heroLogo = document.getElementById('heroLogo');
@@ -525,8 +534,8 @@
       const thr = data[0]?.threshold;
       const avg = data[0]?.referenceAvg;
       meta.textContent = pk.length
-        ? `Regra: >1 dia e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
-        : 'Regra: >1 dia e baixo desempenho recente';
+        ? `Regra: >4 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: >4 dias e baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
           const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
         return `<li>
@@ -536,6 +545,31 @@
       }).join('');
     }
     renderDanger();
+
+    function renderPromo(){
+      const cont = document.getElementById('promoList');
+      const meta = document.getElementById('promoMeta');
+      const data = Array.isArray(promotionList)? promotionList : [];
+      if (!data.length){
+        cont.innerHTML = '<li>Ninguém em zona de promoção.</li>';
+        meta.textContent = '';
+        return;
+      }
+      const pk = data[0]?.periodKeys || [];
+      const thr = data[0]?.threshold;
+      const avg = data[0]?.referenceAvg;
+      meta.textContent = pk.length
+        ? `Regra: >4 dias e soma (últimas 2 corridas) ≥ 150% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: >4 dias e alto desempenho recente';
+      cont.innerHTML = data.map((d,i)=>{
+        const days = d.daysInClan!=null? `${d.daysInClan} dias` : '—';
+        return `<li>
+          <span>${i+1}. ${d.name} <span class="meta">(${d.tag}) · ${days}</span></span>
+          <span class="meta">Soma 2 corridas: ${d.twoPeriodSum}</span>
+        </li>`;
+      }).join('');
+    }
+    renderPromo();
 
     // Tooltip flutuante para evitar clipping
     const tip = document.createElement('div');

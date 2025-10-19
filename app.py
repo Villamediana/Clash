@@ -220,7 +220,7 @@ def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[
 
 def _compute_danger_list(members: list) -> list[dict]:
     """Calcula zona de perigo de expulsão.
-    Critério: membros com >1 dia no clã e cuja soma de medalhas nas últimas 2 corridas
+    Critério: membros com >4 dias no clã e cuja soma de medalhas nas últimas 2 corridas
     (mais recentes ativas) esteja < 30% da média do clã para esse mesmo intervalo.
     Retorna lista ordenada pela soma ascendente.
     """
@@ -252,8 +252,8 @@ def _compute_danger_list(members: list) -> list[dict]:
                     days = (now - first_seen).total_seconds() / 86400.0
                 except Exception:
                     days = None
-            # precisa ter > 1 dia no clã
-            if days is None or days <= 1:
+            # precisa ter > 4 dias no clã
+            if days is None or days <= 4:
                 continue
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
             two_sum = 0
@@ -283,6 +283,77 @@ def _compute_danger_list(members: list) -> list[dict]:
             e["referenceAvg"] = int(round(avg))
             e["threshold"] = int(round(threshold))
         return danger
+    except Exception:
+        return []
+
+
+def _compute_promotion_list(members: list) -> list[dict]:
+    """Calcula zona de promoção.
+    Critério: membros com >4 dias no clã e cuja soma de medalhas nas últimas 2 corridas
+    (mais recentes ativas) esteja >= 150% da média do clã para esse mesmo intervalo.
+    Retorna lista ordenada pela soma descendente.
+    """
+    try:
+        history = _load_fame_history()
+        players_hist = (history or {}).get("players", {})
+        period_keys = _last_period_keys_from_history(history, 2)
+        if not period_keys:
+            return []
+        now = datetime.now(timezone.utc)
+
+        eligible = []
+        sums = []
+        for m in members or []:
+            tag = m.get("tag")
+            if not tag:
+                continue
+            # dias no clã
+            first_seen = None
+            try:
+                ph = players_hist.get(tag, {})
+                fs = ph.get("firstSeen") or m.get("firstSeen")
+                if fs:
+                    first_seen = datetime.fromisoformat(fs.replace('Z','+00:00'))
+            except Exception:
+                first_seen = None
+            days = None
+            if first_seen:
+                try:
+                    days = (now - first_seen).total_seconds() / 86400.0
+                except Exception:
+                    days = None
+            if days is None or days <= 4:
+                continue
+
+            # soma 2 corridas
+            byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
+            two_sum = 0
+            for rk in period_keys:
+                two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
+            entry = {
+                "name": m.get("name"),
+                "tag": tag,
+                "role": m.get("role"),
+                "trophies": m.get("trophies"),
+                "daysInClan": round(days, 1),
+                "twoPeriodSum": int(two_sum),
+                "periodKeys": period_keys,
+                "firstSeen": (players_hist.get(tag, {}) or {}).get("firstSeen") or m.get("firstSeen")
+            }
+            eligible.append(entry)
+            sums.append(two_sum)
+
+        if not eligible:
+            return []
+        avg = (sum(sums) / max(1, len(sums))) if sums else 0.0
+        threshold = avg * 1.50
+        top = [e for e in eligible if e.get("twoPeriodSum", 0) >= threshold]
+        # ordena por soma descendente (maiores primeiro)
+        top.sort(key=lambda x: (-x.get("twoPeriodSum", 0), -(x.get("trophies") or 0)))
+        for e in top:
+            e["referenceAvg"] = int(round(avg))
+            e["threshold"] = int(round(threshold))
+        return top
     except Exception:
         return []
 
@@ -512,6 +583,11 @@ def clan_info():
         danger_list = _compute_danger_list(members)
     except Exception:
         danger_list = []
+    # Calcula lista de promoção
+    try:
+        promotion_list = _compute_promotion_list(members)
+    except Exception:
+        promotion_list = []
 
     return jsonify({
         "clan": {
@@ -552,7 +628,8 @@ def clan_info():
             }
             for m in members
         ],
-        "dangerList": danger_list
+        "dangerList": danger_list,
+        "promotionList": promotion_list
     })
 
 @app.route("/api/tags")
