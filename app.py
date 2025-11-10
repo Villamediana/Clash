@@ -414,10 +414,18 @@ def _compute_danger_list(members: list) -> list[dict]:
                 continue
             
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
-            # soma das últimas 2 guerras
+            # soma das últimas 2 guerras e verifica participação
             two_sum = 0
+            participated = False
             for rk in period_keys:
-                two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
+                period_total = int((byp.get(rk) or {}).get("total", 0) or 0)
+                two_sum += period_total
+                if period_total > 0:
+                    participated = True
+            
+            # só inclui se participou em pelo menos uma das últimas 2 guerras
+            if not participated:
+                continue
             
             entry = {
                 "name": m.get("name"),
