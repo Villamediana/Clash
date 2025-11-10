@@ -175,37 +175,6 @@
     .promo-list li{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-radius:var(--radius);background:var(--card);border:1px solid rgba(34,197,94,.45)}
     .promo-list .meta{font-size:.9rem;color:var(--muted)}
 
-    /* Notifications */
-    .notification{
-      background:linear-gradient(135deg, rgba(245,158,11,.15), rgba(239,68,68,.10));
-      border:1px solid rgba(245,158,11,.35);
-      border-radius:var(--radius);
-      padding:1rem;
-      box-shadow:0 8px 24px rgba(0,0,0,.45);
-      backdrop-filter:blur(10px);
-      display:flex;
-      align-items:flex-start;
-      gap:.75rem;
-      animation:slideInRight .3s ease;
-    }
-    .notification.return{
-      background:linear-gradient(135deg, rgba(34,197,94,.15), rgba(16,185,129,.10));
-      border-color:rgba(34,197,94,.35);
-    }
-    .notification-icon{font-size:1.5rem;flex-shrink:0;}
-    .notification-content{flex:1;font-size:.9rem;}
-    .notification-content strong{display:block;margin-bottom:.25rem;}
-    .notification-dismiss{
-      background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
-      border-radius:8px;padding:.35rem .6rem;cursor:pointer;font-size:.75rem;
-      color:var(--fg);transition:all .2s ease;
-    }
-    .notification-dismiss:hover{background:rgba(255,255,255,.2);}
-    @keyframes slideInRight{
-      from{transform:translateX(100%);opacity:0;}
-      to{transform:translateX(0);opacity:1;}
-    }
-
     .member{font-weight:400;}
     .elder{font-weight:700;}
     .coleader{font-weight:700;
@@ -301,7 +270,7 @@
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Zona de perigo de expulsão</h4>
-              <p style="color:var(--muted)">Jogadores cuja soma nas <strong>últimas 2 guerras</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
+              <p style="color:var(--muted)">Jogadores com mais de 4 dias no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Win‑rate do deck e do jogador</h4>
@@ -364,20 +333,8 @@
           <li>Carregando avaliação…</li>
         </ul>
       </div>
-      <div class="danger-section">
-        <div class="danger-header">
-          <h3>Ex-membros</h3>
-          <p id="departureMeta">—</p>
-        </div>
-        <ul class="danger-list" id="departureList">
-          <li>Carregando histórico…</li>
-        </ul>
-      </div>
     </div>
   </section>
-
-  <!-- Notifications container -->
-  <div id="notificationsContainer" style="position:fixed;top:80px;right:20px;z-index:10000;display:flex;flex-direction:column;gap:.5rem;max-width:360px"></div>
 
   <footer>&copy; 2025 A Villa – todos os direitos reservados.</footer>
 
@@ -411,22 +368,10 @@
       if (heroTitle) heroTitle.textContent = clan.name;
       if (clanTagEl) clanTagEl.textContent = `${clan.tag}`;
 
-      // Monta estatísticas com emojis e flechitas
+      // Monta estatísticas com emojis
       const membros = `${clan.membersCount} membros`;
-      const metrics = clan.metrics || {};
-      const deltas = metrics.deltas || {};
-      
-      // Helper para flechita
-      const arrow = (delta) => {
-        if (!delta || delta === 0) return '';
-        return delta > 0 ? '<span style="color:#22c55e">⬆</span>' : '<span style="color:#ef4444">⬇</span>';
-      };
-      
-      const war = `🏆 ${clan.clanWarTrophies} ${arrow(deltas.warTrophies)}`;
-      const score = `⚔️ ${clan.clanScore} ${arrow(deltas.clanScore)}`;
-      const donations = `🎁 ${metrics.donations || 0} ${arrow(deltas.donations)}`;
-      const avgFame = `📊 ${metrics.avgFame || 0} média ${arrow(deltas.avgFame)}`;
-      
+      const war = `🏆 ${clan.clanWarTrophies} troféus`;
+      const score = `⚔️ ${clan.clanScore} pontuação`;
       // Idade (se existir createdAt)
       let idade = '';
       if (clan.createdAt) {
@@ -446,7 +391,7 @@
           }
         }
       }
-      clanStats.innerHTML = `👥 ${membros} · ${war} troféus · ${score} pontuação · ${donations} donações · ${avgFame} ${idade}`;
+      clanStats.textContent = `👥 ${membros} · ${war} · ${score} ${idade}`;
 
       // Atualiza favicon da aba
       let favicon = document.querySelector("link[rel='icon']");
@@ -594,8 +539,8 @@
       const thr = data[0]?.threshold;
       const avg = data[0]?.referenceAvg;
       meta.textContent = pk.length
-        ? `Regra: soma (últimas 2 guerras) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
-        : 'Regra: baixo desempenho recente';
+        ? `Regra: >4 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: >4 dias e baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
           const member = (membersData||[]).find(x=>x.tag===d.tag) || {};
           const roleKey = (member.role||d.role||'member').toLowerCase();
@@ -714,99 +659,6 @@
       });
     }
     renderPromo();
-
-    // Departures (ex-members)
-    function renderDepartures(){
-      fetch('/api/departures')
-        .then(r=>r.json())
-        .then(data=>{
-          const cont = document.getElementById('departureList');
-          const meta = document.getElementById('departureMeta');
-          const deps = data.departures || [];
-          if(!deps.length){
-            cont.innerHTML='<li>Nenhuma saída registrada.</li>';
-            meta.textContent='';
-            return;
-          }
-          meta.textContent=`Total: ${deps.length} ex-membros`;
-          cont.innerHTML = deps.map((d,i)=>{
-            const roleKey = (d.role||'member').toLowerCase();
-            let leftRel = '—';
-            try{
-              const leftDate = new Date(d.leftAt);
-              if(!isNaN(leftDate)){
-                const diffMs = Date.now() - leftDate.getTime();
-                const dias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                if (dias === 0) leftRel = 'Hoje';
-                else if (dias === 1) leftRel = 'Ontem';
-                else if (dias < 30) leftRel = `${dias} dias atrás`;
-                else {
-                  const meses = Math.floor(dias / 30);
-                  if (meses < 12) leftRel = `${meses} ${meses===1?'mês':'meses'} atrás`;
-                  else { const anos = Math.floor(meses / 12); leftRel = `${anos} ${anos===1?'ano':'anos'} atrás`; }
-                }
-              }
-            }catch(e){}
-            return `<li>
-              <span>${i+1}. ${d.name} <span class="meta">(${d.tag})</span></span>
-              <span class="meta"><span class='${cssRole[roleKey]}'>${rolePT[roleKey]||roleKey}</span> · ${leftRel}</span>
-            </li>`;
-          }).join('');
-        })
-        .catch(()=>{});
-    }
-    renderDepartures();
-
-    // Notifications system
-    function loadNotifications(){
-      fetch('/api/notifications')
-        .then(r=>r.json())
-        .then(data=>{
-          const notifs = data.notifications || [];
-          const container = document.getElementById('notificationsContainer');
-          notifs.forEach(n=>{
-            if(document.querySelector(`[data-notif-tag="${n.tag}"][data-notif-type="${n.type}"]`)) return;
-            const div = document.createElement('div');
-            div.className = `notification ${n.type==='return'?'return':''}`;
-            div.setAttribute('data-notif-tag', n.tag);
-            div.setAttribute('data-notif-type', n.type);
-            
-            let icon = n.type==='departure' ? '🚨' : '⭐';
-            let msg = '';
-            if(n.type==='departure'){
-              const role = rolePT[n.role?.toLowerCase()] || n.role || '';
-              msg = `<strong>${n.name}</strong>${role} saiu do clã`;
-            } else {
-              const prev = rolePT[n.previousRole?.toLowerCase()] || n.previousRole || '';
-              msg = `<strong>${n.name}</strong>Voltou ao clã${prev? ' (era '+prev+')':''}`;
-            }
-            
-            div.innerHTML = `
-              <div class="notification-icon">${icon}</div>
-              <div class="notification-content">${msg}</div>
-              <button class="notification-dismiss">✕</button>
-            `;
-            
-            const dismissBtn = div.querySelector('.notification-dismiss');
-            dismissBtn.onclick = ()=>{
-              fetch('/api/dismiss-notification', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({type:n.type, tag:n.tag})
-              }).then(()=>{
-                div.style.opacity='0';
-                div.style.transform='translateX(100%)';
-                setTimeout(()=>div.remove(), 300);
-              });
-            };
-            
-            container.appendChild(div);
-          });
-        })
-        .catch(()=>{});
-    }
-    loadNotifications();
-    setInterval(loadNotifications, 60000); // atualiza a cada 1 min
 
     // Tooltip flutuante para evitar clipping
     const tip = document.createElement('div');
