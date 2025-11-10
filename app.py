@@ -395,21 +395,21 @@ def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[
 
 def _compute_danger_list(members: list) -> list[dict]:
     """Calcula zona de perigo de expulsão.
-    Critério: membros com >4 dias no clã, pelo menos 1 guerra participada (>0 medalhas),
-    e cuja soma de medalhas nas últimas 2 corridas (mais recentes ativas) esteja < 30% da média do clã.
-    Retorna lista ordenada pela soma ascendente.
+    Critério: membros com >5 dias no clã e medalhas da última guerra < 30% da média do clã nessa guerra.
+    Retorna lista ordenada ascendente.
     """
     try:
         history = _load_fame_history()
         players_hist = (history or {}).get("players", {})
-        period_meta = (history or {}).get("periodMeta", {})
-        period_keys = _last_period_keys_from_history(history, 2)
+        period_keys = _last_period_keys_from_history(history, 1)  # apenas última guerra
         if not period_keys:
             return []
+        last_war_key = period_keys[0]
         now = datetime.now(timezone.utc)
-        # calcula soma por membro e média de referência
+        
+        # calcula medalhas por membro na última guerra
         eligible = []
-        sums = []
+        war_medals = []
         for m in members or []:
             tag = m.get("tag")
             if not tag:
@@ -428,50 +428,34 @@ def _compute_danger_list(members: list) -> list[dict]:
                     days = (now - first_seen).total_seconds() / 86400.0
                 except Exception:
                     days = None
-            # precisa ter > 4 dias no clã
-            if days is None or days <= 4:
+            # precisa ter > 5 dias no clã
+            if days is None or days <= 5:
                 continue
-            # exige pelo menos 1 guerra participada (exclui training)
+            
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
-            wars_count = 0
-            try:
-                for rk, v in (byp or {}).items():
-                    meta = (period_meta.get(rk) or {})
-                    ptype = str(meta.get("periodType") or "").lower()
-                    if ptype == "training":
-                        continue
-                    tot_v = int((v or {}).get("total", 0) or 0)
-                    if tot_v > 0:
-                        wars_count += 1
-            except Exception:
-                wars_count = 0
-            if wars_count < 1:
-                continue
-
-            # soma nas últimas 2 corridas
-            two_sum = 0
-            for rk in period_keys:
-                two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
+            last_war_total = int((byp.get(last_war_key) or {}).get("total", 0) or 0)
+            
             entry = {
                 "name": m.get("name"),
                 "tag": tag,
                 "role": m.get("role"),
                 "trophies": m.get("trophies"),
                 "daysInClan": round(days, 1),
-                "twoPeriodSum": int(two_sum),
-                "periodKeys": period_keys,
+                "lastWarMedals": last_war_total,
+                "periodKeys": [last_war_key],
                 "firstSeen": (players_hist.get(tag, {}) or {}).get("firstSeen") or m.get("firstSeen")
             }
             eligible.append(entry)
-            sums.append(two_sum)
+            war_medals.append(last_war_total)
         if not eligible:
             return []
-        avg = (sum(sums) / max(1, len(sums))) if sums else 0.0
+        
+        avg = (sum(war_medals) / max(1, len(war_medals))) if war_medals else 0.0
         threshold = avg * 0.30
-        danger = [e for e in eligible if e.get("twoPeriodSum", 0) < threshold]
+        danger = [e for e in eligible if e.get("lastWarMedals", 0) < threshold]
         # ordena pela soma ascendente (menores primeiro)
-        danger.sort(key=lambda x: (x.get("twoPeriodSum", 0), x.get("trophies") or 0))
-        # inclui metadado de referência para uso no front se quiser exibir
+        danger.sort(key=lambda x: (x.get("lastWarMedals", 0), x.get("trophies") or 0))
+        # inclui metadado de referência
         for e in danger:
             e["referenceAvg"] = int(round(avg))
             e["threshold"] = int(round(threshold))
