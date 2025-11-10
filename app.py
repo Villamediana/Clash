@@ -220,13 +220,14 @@ def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[
 
 def _compute_danger_list(members: list) -> list[dict]:
     """Calcula zona de perigo de expulsão.
-    Critério: membros com >4 dias no clã e cuja soma de medalhas nas últimas 2 corridas
-    (mais recentes ativas) esteja < 30% da média do clã para esse mesmo intervalo.
+    Critério: membros com >4 dias no clã, pelo menos 1 guerra participada (>0 medalhas),
+    e cuja soma de medalhas nas últimas 2 corridas (mais recentes ativas) esteja < 30% da média do clã.
     Retorna lista ordenada pela soma ascendente.
     """
     try:
         history = _load_fame_history()
         players_hist = (history or {}).get("players", {})
+        period_meta = (history or {}).get("periodMeta", {})
         period_keys = _last_period_keys_from_history(history, 2)
         if not period_keys:
             return []
@@ -255,7 +256,24 @@ def _compute_danger_list(members: list) -> list[dict]:
             # precisa ter > 4 dias no clã
             if days is None or days <= 4:
                 continue
+            # exige pelo menos 1 guerra participada (exclui training)
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
+            wars_count = 0
+            try:
+                for rk, v in (byp or {}).items():
+                    meta = (period_meta.get(rk) or {})
+                    ptype = str(meta.get("periodType") or "").lower()
+                    if ptype == "training":
+                        continue
+                    tot_v = int((v or {}).get("total", 0) or 0)
+                    if tot_v > 0:
+                        wars_count += 1
+            except Exception:
+                wars_count = 0
+            if wars_count < 1:
+                continue
+
+            # soma nas últimas 2 corridas
             two_sum = 0
             for rk in period_keys:
                 two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
