@@ -27,6 +27,181 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ===== DEPARTURES & RETURNS SYSTEM =====
+def _load_departures(path: str = "departures.json") -> dict:
+    """Carrega histórico de saídas do clã."""
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"departures": [], "lastSnapshot": {}}
+
+
+def _save_departures(data: dict, path: str = "departures.json") -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _load_returns(path: str = "returns.json") -> dict:
+    """Carrega histórico de retornos ao clã."""
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"returns": []}
+
+
+def _save_returns(data: dict, path: str = "returns.json") -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _track_departures_and_returns(current_members: list) -> tuple[list, list]:
+    """Detecta saídas e retornos, retorna (new_departures, new_returns)."""
+    try:
+        dep_data = _load_departures()
+        ret_data = _load_returns()
+        last_snapshot = dep_data.get("lastSnapshot", {})
+        current_tags = {m.get("tag") for m in current_members if m.get("tag")}
+        
+        new_departures = []
+        new_returns = []
+        now = _now_iso()
+        
+        # Detecta saídas: quem estava no snapshot mas não está mais
+        for tag, info in last_snapshot.items():
+            if tag not in current_tags:
+                departure = {
+                    "tag": tag,
+                    "name": info.get("name"),
+                    "role": info.get("role"),
+                    "trophies": info.get("trophies"),
+                    "leftAt": now
+                }
+                new_departures.append(departure)
+                dep_data.setdefault("departures", []).append(departure)
+        
+        # Detecta retornos: quem está agora mas estava em departures
+        all_departed_tags = {d.get("tag") for d in dep_data.get("departures", [])}
+        for m in current_members:
+            tag = m.get("tag")
+            if not tag:
+                continue
+            if tag in all_departed_tags and tag not in last_snapshot:
+                # busca info antiga
+                old_info = next((d for d in dep_data.get("departures", []) if d.get("tag") == tag), {})
+                ret_entry = {
+                    "tag": tag,
+                    "name": m.get("name"),
+                    "currentRole": m.get("role"),
+                    "previousRole": old_info.get("role"),
+                    "returnedAt": now
+                }
+                new_returns.append(ret_entry)
+                ret_data.setdefault("returns", []).append(ret_entry)
+        
+        # Actualiza snapshot con miembros actuales
+        new_snapshot = {}
+        for m in current_members:
+            tag = m.get("tag")
+            if tag:
+                new_snapshot[tag] = {
+                    "name": m.get("name"),
+                    "role": m.get("role"),
+                    "trophies": m.get("trophies")
+                }
+        dep_data["lastSnapshot"] = new_snapshot
+        
+        _save_departures(dep_data)
+        _save_returns(ret_data)
+        
+        return new_departures, new_returns
+    except Exception:
+        return [], []
+
+
+# ===== END DEPARTURES & RETURNS SYSTEM =====
+
+# ===== CLAN METRICS TRACKING =====
+def _load_clan_metrics(path: str = "clan_metrics.json") -> dict:
+    """Carrega snapshot de métricas do clã para comparação."""
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {"lastSnapshot": {}, "history": []}
+
+
+def _save_clan_metrics(data: dict, path: str = "clan_metrics.json") -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _track_clan_metrics(clan_info: dict, members: list) -> dict:
+    """Calcula métricas atuais e deltas vs snapshot anterior.
+    Retorna: {donations, avgFame, warTrophies, clanScore, deltas: {...}}
+    """
+    try:
+        metrics_data = _load_clan_metrics()
+        last_snap = metrics_data.get("lastSnapshot", {})
+        
+        # Calcula métricas atuais
+        total_donations = sum(int(m.get("donations") or 0) for m in members)
+        total_fame = sum(int(m.get("fame") or 0) for m in members)
+        avg_fame = int(total_fame / max(1, len(members)))
+        war_trophies = int(clan_info.get("clanWarTrophies") or 0)
+        clan_score = int(clan_info.get("clanScore") or 0)
+        
+        current_snap = {
+            "donations": total_donations,
+            "avgFame": avg_fame,
+            "warTrophies": war_trophies,
+            "clanScore": clan_score,
+            "timestamp": _now_iso()
+        }
+        
+        # Calcula deltas
+        deltas = {}
+        for key in ["donations", "avgFame", "warTrophies", "clanScore"]:
+            curr = current_snap.get(key, 0)
+            prev = last_snap.get(key, curr)  # primera vez usa curr para evitar delta
+            delta = curr - prev
+            if prev == 0:
+                delta = 0  # evita división por cero en primera ejecución
+            deltas[key] = delta
+        
+        # Salva snapshot actual e histórico
+        metrics_data["lastSnapshot"] = current_snap
+        metrics_data.setdefault("history", []).append(current_snap)
+        # mantém apenas últimos 100 snapshots
+        if len(metrics_data["history"]) > 100:
+            metrics_data["history"] = metrics_data["history"][-100:]
+        
+        _save_clan_metrics(metrics_data)
+        
+        return {
+            "donations": total_donations,
+            "avgFame": avg_fame,
+            "warTrophies": war_trophies,
+            "clanScore": clan_score,
+            "deltas": deltas
+        }
+    except Exception:
+        return {
+            "donations": 0,
+            "avgFame": 0,
+            "warTrophies": 0,
+            "clanScore": 0,
+            "deltas": {}
+        }
+# ===== END CLAN METRICS TRACKING =====
+
 def _load_fame_history(path: str = "fame_history.json") -> dict:
     if os.path.exists(path):
         try:
@@ -621,6 +796,18 @@ def clan_info():
             m["firstSeen"] = None
             m["rankDeltaSticky"] = 0
 
+    # Detecta saídas e retornos
+    try:
+        new_departures, new_returns = _track_departures_and_returns(members)
+    except Exception:
+        new_departures, new_returns = [], []
+
+    # Calcula métricas e deltas do clã
+    try:
+        clan_metrics = _track_clan_metrics(info, members)
+    except Exception:
+        clan_metrics = {"donations": 0, "avgFame": 0, "warTrophies": 0, "clanScore": 0, "deltas": {}}
+
     # Calcula lista de perigo de expulsão (sempre independente do filtro visual do front)
     try:
         danger_list = _compute_danger_list(members)
@@ -640,6 +827,11 @@ def clan_info():
             "clanScore": info.get("clanScore"),
             "clanWarTrophies": info.get("clanWarTrophies"),
             "badgeUrl": badge_url,
+            "metrics": {
+                "donations": clan_metrics.get("donations", 0),
+                "avgFame": clan_metrics.get("avgFame", 0),
+                "deltas": clan_metrics.get("deltas", {})
+            },
             # Campo de criação do clã (usa valor da API, senão usa data fixa solicitada)
             "createdAt": (
                 info.get("createdDate")
@@ -859,6 +1051,105 @@ def estatisticas_cartas():
         })
     resultado.sort(key=lambda x: (-x["winrate"], -x["usos"]))
     return jsonify(resultado)
+
+
+@app.route("/api/departures")
+def api_departures():
+    """Lista completa de ex-membros (saídas do clã)."""
+    try:
+        dep_data = _load_departures()
+        departures = dep_data.get("departures", [])
+        # ordena por leftAt desc (mais recentes primeiro)
+        departures_sorted = sorted(departures, key=lambda x: x.get("leftAt", ""), reverse=True)
+        return jsonify({"departures": departures_sorted})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/notifications")
+def api_notifications():
+    """Retorna notificações ativas: saídas de ancião/colíder e retornos (últimos 3 dias)."""
+    try:
+        now = datetime.now(timezone.utc)
+        three_days_ago = (now.timestamp() - (3 * 86400))
+        
+        # Carrega saídas e retornos
+        dep_data = _load_departures()
+        ret_data = _load_returns()
+        
+        notifications = []
+        
+        # Saídas de ancião/colíder nos últimos 3 dias
+        for d in dep_data.get("departures", []):
+            role = str(d.get("role") or "").lower()
+            if role not in {"elder", "coleader"}:
+                continue
+            try:
+                left_ts = datetime.fromisoformat(d.get("leftAt", "").replace('Z', '+00:00')).timestamp()
+                if left_ts >= three_days_ago:
+                    notifications.append({
+                        "type": "departure",
+                        "tag": d.get("tag"),
+                        "name": d.get("name"),
+                        "role": d.get("role"),
+                        "timestamp": d.get("leftAt")
+                    })
+            except Exception:
+                continue
+        
+        # Retornos de qualquer cargo nos últimos 3 dias
+        for r in ret_data.get("returns", []):
+            try:
+                ret_ts = datetime.fromisoformat(r.get("returnedAt", "").replace('Z', '+00:00')).timestamp()
+                if ret_ts >= three_days_ago:
+                    notifications.append({
+                        "type": "return",
+                        "tag": r.get("tag"),
+                        "name": r.get("name"),
+                        "currentRole": r.get("currentRole"),
+                        "previousRole": r.get("previousRole"),
+                        "timestamp": r.get("returnedAt")
+                    })
+            except Exception:
+                continue
+        
+        # ordena por timestamp desc
+        notifications.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        return jsonify({"notifications": notifications})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/dismiss-notification", methods=["POST"])
+def api_dismiss_notification():
+    """Marca uma notificação como dismiss (remove do JSON)."""
+    try:
+        data = request.get_json() or {}
+        notif_type = data.get("type")  # "departure" ou "return"
+        tag = data.get("tag")
+        
+        if not notif_type or not tag:
+            return jsonify({"error": "type e tag requeridos"}), 400
+        
+        if notif_type == "departure":
+            dep_data = _load_departures()
+            departures = dep_data.get("departures", [])
+            # remove a entrada correspondente
+            dep_data["departures"] = [d for d in departures if d.get("tag") != tag or str(d.get("role") or "").lower() not in {"elder", "coleader"}]
+            _save_departures(dep_data)
+        elif notif_type == "return":
+            ret_data = _load_returns()
+            returns = ret_data.get("returns", [])
+            # remove a entrada correspondente
+            ret_data["returns"] = [r for r in returns if r.get("tag") != tag]
+            _save_returns(ret_data)
+        else:
+            return jsonify({"error": "type inválido"}), 400
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
 
