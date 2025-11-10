@@ -270,7 +270,7 @@
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Zona de perigo de expulsão</h4>
-              <p style="color:var(--muted)">Jogadores com mais de 4 dias no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
+              <p style="color:var(--muted)">Jogadores com 10 ou mais dias no clã cuja soma nas <strong>últimas 2 corridas</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Win‑rate do deck e do jogador</h4>
@@ -489,12 +489,12 @@
         const ttDon = 'Doações de cartas (semanais)';
         const ttMemberSince = sinceRel==='—' ? 'Membro —' : `Membro há ${sinceRel}`;
         const expulse = (()=>{
-          // critério: >4 dias de membro e fame atual abaixo da mediana do clã em 30%
+          // critério: >=10 dias de membro e fame atual abaixo da mediana do clã em 30%
           const days = firstSeen? Math.floor((Date.now()-firstSeen.getTime())/(1000*60*60*24)) : 0;
           const fame = m.fame||0;
           // estimativa simples de referência: média das fames exibidas
           const fameref = data.reduce((acc,x)=>acc+(x.fame||0),0)/(data.length||1);
-          const low = days>4 && fame < (fameref*0.3);
+          const low = days>=10 && fame < (fameref*0.3);
           return low ? '<span class="tt" data-tt="Área de expulsão: poucas medalhas">🚨</span>' : '';
         })();
           return `
@@ -539,8 +539,8 @@
       const thr = data[0]?.threshold;
       const avg = data[0]?.referenceAvg;
       meta.textContent = pk.length
-        ? `Regra: >4 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
-        : 'Regra: >4 dias e baixo desempenho recente';
+        ? `Regra: >=10 dias e soma (últimas 2 corridas) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: >=10 dias e baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
           const member = (membersData||[]).find(x=>x.tag===d.tag) || {};
           const roleKey = (member.role||d.role||'member').toLowerCase();
