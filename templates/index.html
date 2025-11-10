@@ -301,7 +301,7 @@
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Zona de perigo de expulsão</h4>
-              <p style="color:var(--muted)">Jogadores com mais de 5 dias no clã cujas medalhas na <strong>última guerra</strong> estejam abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
+              <p style="color:var(--muted)">Jogadores cuja soma nas <strong>últimas 2 guerras</strong> esteja abaixo de <strong>30% da média</strong> do clã aparecem aqui. É um alerta para engajar mais antes de decisões de gestão.</p>
             </div>
             <div style="background:var(--card);border:1px solid var(--glass);border-radius:12px;padding:1rem">
               <h4 style="margin-bottom:.5rem">Win‑rate do deck e do jogador</h4>
@@ -594,8 +594,8 @@
       const thr = data[0]?.threshold;
       const avg = data[0]?.referenceAvg;
       meta.textContent = pk.length
-        ? `Regra: >5 dias e medalhas da última guerra < 30% da média · Média ${avg||0} · Corte ${thr||0}`
-        : 'Regra: >5 dias e baixo desempenho recente';
+        ? `Regra: soma (últimas 2 guerras) < 30% da média · Média ${avg||0} · Corte ${thr||0}`
+        : 'Regra: baixo desempenho recente';
       cont.innerHTML = data.map((d,i)=>{
           const member = (membersData||[]).find(x=>x.tag===d.tag) || {};
           const roleKey = (member.role||d.role||'member').toLowerCase();

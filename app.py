@@ -395,66 +395,49 @@ def _last_period_keys_from_history(history: dict, max_periods: int = 2) -> list[
 
 def _compute_danger_list(members: list) -> list[dict]:
     """Calcula zona de perigo de expulsão.
-    Critério: membros com >5 dias no clã e medalhas da última guerra < 30% da média do clã nessa guerra.
+    Critério: soma das últimas 2 guerras < 30% da média do clã nesse período.
     Retorna lista ordenada ascendente.
     """
     try:
         history = _load_fame_history()
         players_hist = (history or {}).get("players", {})
-        period_keys = _last_period_keys_from_history(history, 1)  # apenas última guerra
+        period_keys = _last_period_keys_from_history(history, 2)  # últimas 2 guerras
         if not period_keys:
             return []
-        last_war_key = period_keys[0]
-        now = datetime.now(timezone.utc)
         
-        # calcula medalhas por membro na última guerra
+        # calcula soma das últimas 2 guerras por membro
         eligible = []
-        war_medals = []
+        two_war_sums = []
         for m in members or []:
             tag = m.get("tag")
             if not tag:
                 continue
-            first_seen = None
-            try:
-                ph = players_hist.get(tag, {})
-                fs = ph.get("firstSeen") or m.get("firstSeen")
-                if fs:
-                    first_seen = datetime.fromisoformat(fs.replace('Z','+00:00'))
-            except Exception:
-                first_seen = None
-            days = None
-            if first_seen:
-                try:
-                    days = (now - first_seen).total_seconds() / 86400.0
-                except Exception:
-                    days = None
-            # precisa ter > 5 dias no clã
-            if days is None or days <= 5:
-                continue
             
             byp = (players_hist.get(tag, {}) or {}).get("by_period", {})
-            last_war_total = int((byp.get(last_war_key) or {}).get("total", 0) or 0)
+            # soma das últimas 2 guerras
+            two_sum = 0
+            for rk in period_keys:
+                two_sum += int((byp.get(rk) or {}).get("total", 0) or 0)
             
             entry = {
                 "name": m.get("name"),
                 "tag": tag,
                 "role": m.get("role"),
                 "trophies": m.get("trophies"),
-                "daysInClan": round(days, 1),
-                "lastWarMedals": last_war_total,
-                "periodKeys": [last_war_key],
+                "twoPeriodSum": int(two_sum),
+                "periodKeys": period_keys,
                 "firstSeen": (players_hist.get(tag, {}) or {}).get("firstSeen") or m.get("firstSeen")
             }
             eligible.append(entry)
-            war_medals.append(last_war_total)
+            two_war_sums.append(two_sum)
         if not eligible:
             return []
         
-        avg = (sum(war_medals) / max(1, len(war_medals))) if war_medals else 0.0
+        avg = (sum(two_war_sums) / max(1, len(two_war_sums))) if two_war_sums else 0.0
         threshold = avg * 0.30
-        danger = [e for e in eligible if e.get("lastWarMedals", 0) < threshold]
+        danger = [e for e in eligible if e.get("twoPeriodSum", 0) < threshold]
         # ordena pela soma ascendente (menores primeiro)
-        danger.sort(key=lambda x: (x.get("lastWarMedals", 0), x.get("trophies") or 0))
+        danger.sort(key=lambda x: (x.get("twoPeriodSum", 0), x.get("trophies") or 0))
         # inclui metadado de referência
         for e in danger:
             e["referenceAvg"] = int(round(avg))
